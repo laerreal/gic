@@ -1,9 +1,16 @@
 #!/usr/bin/python3
 
+from git_tools import \
+    CommitDesc
+
 from argparse import \
     ArgumentTypeError, \
     ArgumentParser
 from os.path import isdir
+
+class GICCommitDesc(CommitDesc):
+    def __init__(self, *args):
+        super(GICCommitDesc, self).__init__(*args)
 
 def arg_type_directory(string):
     if not isdir(string):

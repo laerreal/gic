@@ -20,6 +20,19 @@ def main():
 
     args = ap.parse_args()
 
+    srcRepoPath = args.source[0]
+
+    print("Building graph of repository: " + srcRepoPath)
+
+    destination = args.destination
+    if destination is None:
+        print("No destination specified. Dry run.")
+        return
+
+    dstRepoPath = destination[0]
+
+    print("The repository will be cloned to: " + dstRepoPath)
+
 if __name__ == "__main__":
     ret = main()
     exit(0 if ret is None else ret)

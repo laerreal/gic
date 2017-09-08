@@ -1,7 +1,13 @@
 #!/usr/bin/python3
 
+from co_dispatcher import \
+    callco
+
 from git_tools import \
     CommitDesc
+
+from git import \
+    Repo
 
 from argparse import \
     ArgumentTypeError, \
@@ -30,6 +36,12 @@ def main():
     srcRepoPath = args.source[0]
 
     print("Building graph of repository: " + srcRepoPath)
+
+    repo = Repo(srcRepoPath)
+    sha2commit = {}
+    callco(GICCommitDesc.co_build_git_graph(repo, sha2commit))
+
+    print("Total commits: %d" % len(sha2commit))
 
     destination = args.destination
     if destination is None:

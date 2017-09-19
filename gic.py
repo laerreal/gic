@@ -1,17 +1,12 @@
 #!/usr/bin/python3
 
-from co_dispatcher import \
-    callco
-
-from git_tools import \
-    CommitDesc
-
-from git import \
-    Repo
-
-from argparse import \
-    ArgumentTypeError, \
+from co_dispatcher import callco
+from git_tools import CommitDesc
+from git import Repo
+from argparse import (
+    ArgumentTypeError,
     ArgumentParser
+)
 from os.path import isdir
 
 class GICCommitDesc(CommitDesc):

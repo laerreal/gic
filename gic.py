@@ -7,11 +7,22 @@ from argparse import (
     ArgumentTypeError,
     ArgumentParser
 )
+from actions import *
+from traceback import print_exc
+from sys import stdout
 from os.path import isdir
 
 class GICCommitDesc(CommitDesc):
+    __slots__ = [
+        "processed"
+        "cloned_sha"
+    ]
+
     def __init__(self, *args):
         super(GICCommitDesc, self).__init__(*args)
+
+        self.cloned_sha = None
+        self.processed = False
 
 def arg_type_directory(string):
     if not isdir(string):
@@ -80,6 +91,11 @@ def is_subtree(c, acceptable = 4):
 
     return prefix
 
+CLONED_REPO_NAME = "__cloned__"
+
+def orphan(n):
+    return "__orphan__%d" % n
+
 def main():
     print("Git Interactive Cloner")
 
@@ -112,6 +128,137 @@ def main():
     dstRepoPath = destination[0]
 
     print("The repository will be cloned to: " + dstRepoPath)
+
+    # Planing
+    queue = sorted(sha2commit.values(), key = lambda c : c.num)
+
+    actions = [
+        RemoveDirectory(path = dstRepoPath),
+        ProvideDirectory(path = dstRepoPath),
+        InitRepo(path = dstRepoPath),
+        AddRemote(
+            path = dstRepoPath,
+            name = CLONED_REPO_NAME,
+            address = srcRepoPath
+        ),
+        FetchRemote(path = dstRepoPath, name = CLONED_REPO_NAME)
+    ]
+
+    iqueue = iter(queue)
+
+    orphan_counter = 0
+
+    prev_c = None
+
+    for c in iqueue:
+        c.processed = True
+
+        m = repo.commit(c.sha)
+
+        if prev_c is not None:
+            if not c.parents:
+                actions.append(
+                    CheckoutOrphan(
+                        name = orphan(orphan_counter),
+                        path = dstRepoPath
+                    )
+                )
+                orphan_counter += 1
+            else:
+                # get real parents order
+                main_stream_sha = m.parents[0].hexsha
+                if main_stream_sha != prev_c.sha:
+                    # jump to main stream commit
+                    actions.append(CheckoutCloned(
+                        path = dstRepoPath,
+                        commit = sha2commit[main_stream_sha]
+                    ))
+
+        if len(c.parents) > 1:
+            subtree_prefix = None if len(c.parents) != 2 else is_subtree(m)
+
+            if subtree_prefix is None:
+                actions.append(MergeCloned(
+                    path = dstRepoPath,
+                    commit = c,
+                    author = m.author,
+                    committer = m.committer,
+                    committed_date = m.committed_date,
+                    committer_tz_offset = m.committer_tz_offset,
+                    authored_date = m.authored_date,
+                    author_tz_offset = m.author_tz_offset,
+                    message = m.message,
+                    # original parents order is significant
+                    extra_parents = [
+                        sha2commit[p.hexsha] for p in m.parents[1:]
+                    ]
+                ))
+            else:
+                actions.append(SubtreeMerge(
+                    path = dstRepoPath,
+                    commit = c,
+                    author = m.author,
+                    committer = m.committer,
+                    committed_date = m.committed_date,
+                    committer_tz_offset = m.committer_tz_offset,
+                    authored_date = m.authored_date,
+                    author_tz_offset = m.author_tz_offset,
+                    message = m.message,
+                    parent = sha2commit[m.parents[1].hexsha],
+                    prefix = subtree_prefix
+                ))
+
+        else:
+            actions.append(CherryPick(
+                path = dstRepoPath,
+                commit = c,
+                committer = m.committer,
+                message = m.message,
+                committed_date = m.committed_date,
+                committer_tz_offset = m.committer_tz_offset
+            ))
+
+        for h in c.heads:
+            if h.path.startswith("refs/heads/"):
+                actions.append(CreateHead(
+                    path = dstRepoPath,
+                    name = h.name
+                ))
+            elif h.path.startswith("refs/tags/"):
+                actions.append(CreateTag(
+                    path = dstRepoPath,
+                    name = h.name
+                ))
+
+        prev_c = c
+
+    # delete temporary branch names
+    for o in range(0, orphan_counter):
+        actions.append(DeleteHead(
+            path = dstRepoPath,
+            name = orphan(o)
+        ))
+
+    actions.extend([
+        CheckoutCloned(
+            path = dstRepoPath,
+            commit = sha2commit[repo.head.commit.hexsha]
+        ),
+        RemoveRemote(path = dstRepoPath, name = CLONED_REPO_NAME),
+        CollectGarbage(path = dstRepoPath)
+    ])
+
+    for a in actions:
+        try:
+            a()
+        except:
+            print("Failed on %s" % a)
+            print_exc(file = stdout)
+            return
+
+    for c in sha2commit.values():
+        if not c.processed:
+            print("Commit %s was not cloned!" % str(c.sha))
 
 if __name__ == "__main__":
     ret = main()

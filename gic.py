@@ -39,7 +39,12 @@ def main():
 
     repo = Repo(srcRepoPath)
     sha2commit = {}
-    callco(GICCommitDesc.co_build_git_graph(repo, sha2commit))
+    callco(
+        GICCommitDesc.co_build_git_graph(repo, sha2commit,
+            skip_remotes = True,
+            skip_stashes = True
+        )
+    )
 
     print("Total commits: %d" % len(sha2commit))
 

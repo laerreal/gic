@@ -11,6 +11,7 @@ class CommitDesc(object):
         self.sha = sha
         self.parents = parents
         self.children = children
+        self.heads = []
 
         # serial number according to the topological sorting
         self.num = None
@@ -30,11 +31,15 @@ class CommitDesc(object):
         # git.Commit, child is instance of QemuCommitDesc
         build_stack = []
         for head in repo.references:
-            # skip processed heads
-            if head.commit.hexsha in commit_desc_nodes:
+            try:
+                head_desc = commit_desc_nodes[head.commit.hexsha]
+            except KeyError:
+                head_desc = klass(head.commit.hexsha, [], [])
+                head_desc.heads.append(head)
+            else:
+                head_desc.heads.append(head)
                 continue
 
-            head_desc = klass(head.commit.hexsha, [], [])
             commit_desc_nodes[head.commit.hexsha] = head_desc
             # add edges connected to head being processed
             for p in head.commit.parents:

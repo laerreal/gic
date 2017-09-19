@@ -17,7 +17,10 @@ class CommitDesc(object):
         self.num = None
 
     @classmethod
-    def co_build_git_graph(klass, repo, commit_desc_nodes):
+    def co_build_git_graph(klass, repo, commit_desc_nodes,
+        skip_remotes = False,
+        skip_stashes = False
+    ):
         # iterations to yield
         i2y = GGB_IBY
 
@@ -31,6 +34,11 @@ class CommitDesc(object):
         # git.Commit, child is instance of QemuCommitDesc
         build_stack = []
         for head in repo.references:
+            if skip_remotes and head.path.startswith("refs/remotes/"):
+                continue
+            if skip_stashes and head.path.startswith("refs/stash"):
+                continue
+
             try:
                 head_desc = commit_desc_nodes[head.commit.hexsha]
             except KeyError:

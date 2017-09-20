@@ -209,10 +209,10 @@ class FetchRemote(RemoteAction):
         self.git("fetch", "--tags", self.name)
 
 class CheckoutCloned(GitAction):
-    __slots__ = ["commit"]
+    __slots__ = ["commit_sha"]
 
     def __call__(self):
-        commit = self._ctx.sha2commit[self.commit]
+        commit = self._ctx.sha2commit[self.commit_sha]
 
         self.git("checkout", "-f", commit.cloned_sha)
 
@@ -237,7 +237,7 @@ class CheckoutOrphan(GitAction):
                 rmtree(file_path)
 
 class MergeCloned(GitAction):
-    __slots__ = ["commit", "author_name", "author_email", "committer_name",
+    __slots__ = ["commit_sha", "author_name", "author_email", "committer_name",
                  "committer_email", "committed_date", "authored_date",
                  "message", "extra_parents", "committer_tz_offset",
                  "author_tz_offset"]
@@ -254,7 +254,7 @@ class MergeCloned(GitAction):
             self.author_tz_offset
         )
 
-        commit = self._ctx.sha2commit[self.commit]
+        commit = self._ctx.sha2commit[self.commit_sha]
         message = self.message
 
         try:
@@ -289,7 +289,7 @@ class MergeCloned(GitAction):
         commit.cloned_sha = self._stdout.split("\n")[0]
 
 class SubtreeMerge(GitAction):
-    __slots__ = ["commit", "author_name", "author_email", "committer_name",
+    __slots__ = ["commit_sha", "author_name", "author_email", "committer_name",
                  "committer_email", "committed_date", "authored_date",
                  "message", "parent", "prefix", "committer_tz_offset",
                  "author_tz_offset"]
@@ -308,7 +308,7 @@ class SubtreeMerge(GitAction):
             self.author_tz_offset
         )
 
-        commit = self._ctx.sha2commit[self.commit]
+        commit = self._ctx.sha2commit[self.commit_sha]
         message = self.message
         prefix = self.prefix
 
@@ -360,11 +360,11 @@ class SubtreeMerge(GitAction):
         commit.cloned_sha = self._stdout.split("\n")[0]
 
 class CherryPick(GitAction):
-    __slots__ = ["commit", "committer_name", "committer_email",
+    __slots__ = ["commit_sha", "committer_name", "committer_email",
                   "message", "committed_date", "committer_tz_offset"]
 
     def __call__(self):
-        c = self._ctx.sha2commit[self.commit]
+        c = self._ctx.sha2commit[self.commit_sha]
 
         # Note that author is set by cherry-pick
         environ["GIT_COMMITTER_DATE"] = dt(

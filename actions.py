@@ -106,6 +106,8 @@ class Action(object):
                 continue
 
             for attr in slots:
+                if attr.startswith("_"):
+                    continue
                 setattr(self, attr, kw[attr])
 
         if queue:

@@ -142,7 +142,7 @@ class ProvideDirectory(FSAction):
         makedirs(self.path)
 
 class GitAction(Action):
-    __slots__ = ["path"]
+    __slots__ = ["path", "_stdout", "_stderr"]
 
     def git(self, *cmd_args):
         cwd = getcwd()

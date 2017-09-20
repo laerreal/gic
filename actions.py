@@ -95,6 +95,8 @@ def dt(ts, off):
     return ret
 
 class Action(object):
+    __slots__ = ["_ctx"]
+
     def __init__(self, queue = True, ** kw):
         """
         @queue: auto add the action to queue of the current action context
@@ -110,16 +112,21 @@ class Action(object):
                     continue
                 setattr(self, attr, kw[attr])
 
+        self._ctx = None
         if queue:
             self.q()
 
     def queue(self):
+        if self._ctx is not None:
+            raise RuntimeError("Already in the action context")
+
         global current_context
 
         if current_context is None:
             raise RuntimeError("No action context set")
 
         current_context.actions.append(self)
+        self._ctx = current_context
 
     q = queue
 

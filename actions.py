@@ -19,6 +19,7 @@ __all__ = [
           , "CreateTag"
           , "CollectGarbage"
   , "ActionContext"
+      , "GitContext"
   , "switch_context"
 ]
 
@@ -75,6 +76,14 @@ class ActionContext(object):
                 print("Failed on %s" % a)
                 print_exc(file = stdout)
                 break
+
+class GitContext(ActionContext):
+    __slots__ = ["sha2commit"]
+
+    def __init__(self, **kw):
+        super(GitContext, self).__init__(**kw)
+
+        self.sha2commit = {}
 
 def dt(ts, off):
     dt = gmtime(ts - off)

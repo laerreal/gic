@@ -94,7 +94,7 @@ class ActionContext(sloted):
         self.current_action = idx + 1
 
 class GitContext(ActionContext):
-    __slots__ = ["_sha2commit"]
+    __slots__ = ["_sha2commit", "src_repo_path"]
 
     def __init__(self, **kw):
         super(GitContext, self).__init__(**kw)

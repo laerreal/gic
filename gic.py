@@ -228,7 +228,7 @@ def main():
 
     print("Building graph of repository: " + srcRepoPath)
 
-    ctx = GitContext()
+    ctx = GitContext(src_repo_path = srcRepoPath)
     repo = Repo(srcRepoPath)
     sha2commit = ctx._sha2commit
     callco(

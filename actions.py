@@ -46,6 +46,8 @@ from time import (
     gmtime,
     strftime
 )
+from traceback import print_exc
+from sys import stdout
 
 current_context = None
 
@@ -64,6 +66,15 @@ class ActionContext(object):
 
     def __init__(self):
         self.actions = []
+
+    def do(self):
+        for a in self.actions:
+            try:
+                a()
+            except:
+                print("Failed on %s" % a)
+                print_exc(file = stdout)
+                break
 
 def dt(ts, off):
     dt = gmtime(ts - off)

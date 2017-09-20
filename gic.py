@@ -94,42 +94,8 @@ CLONED_REPO_NAME = "__cloned__"
 def orphan(n):
     return "__orphan__%d" % n
 
-def main():
-    print("Git Interactive Cloner")
-
-    ap = ArgumentParser()
-    ap.add_argument("source", type = arg_type_directory, nargs = 1)
-    ap.add_argument("-d", "--destination", type = arg_type_directory, nargs = 1)
-
-    args = ap.parse_args()
-
-    srcRepoPath = args.source[0]
-
-    print("Building graph of repository: " + srcRepoPath)
-
-    ctx = GitContext()
-    repo = Repo(srcRepoPath)
-    sha2commit = ctx.sha2commit
-    callco(
-        GICCommitDesc.co_build_git_graph(repo, sha2commit,
-            skip_remotes = True,
-            skip_stashes = True
-        )
-    )
-
-    print("Total commits: %d" % len(sha2commit))
-
-    destination = args.destination
-    if destination is None:
-        print("No destination specified. Dry run.")
-        return
-
-    dstRepoPath = destination[0]
-
-    print("The repository will be cloned to: " + dstRepoPath)
-
-    # Planing
-    switch_context(ctx)
+def plan(repo, sha2commit, dstRepoPath):
+    srcRepoPath = repo.working_dir
 
     queue = sorted(sha2commit.values(), key = lambda c : c.num)
 
@@ -245,11 +211,50 @@ def main():
     RemoveRemote(path = dstRepoPath, name = CLONED_REPO_NAME)
     CollectGarbage(path = dstRepoPath)
 
-    ctx.do()
-
     for c in sha2commit.values():
         if not c.processed:
             print("Commit %s was not cloned!" % str(c.sha))
+
+def main():
+    print("Git Interactive Cloner")
+
+    ap = ArgumentParser()
+    ap.add_argument("source", type = arg_type_directory, nargs = 1)
+    ap.add_argument("-d", "--destination", type = arg_type_directory, nargs = 1)
+
+    args = ap.parse_args()
+
+    srcRepoPath = args.source[0]
+
+    print("Building graph of repository: " + srcRepoPath)
+
+    ctx = GitContext()
+    repo = Repo(srcRepoPath)
+    sha2commit = ctx.sha2commit
+    callco(
+        GICCommitDesc.co_build_git_graph(repo, sha2commit,
+            skip_remotes = True,
+            skip_stashes = True
+        )
+    )
+
+    print("Total commits: %d" % len(sha2commit))
+
+    destination = args.destination
+    if destination is None:
+        print("No destination specified. Dry run.")
+        return
+
+    dstRepoPath = destination[0]
+
+    print("The repository will be cloned to: " + dstRepoPath)
+
+    # Planing
+    switch_context(ctx)
+
+    plan(repo, sha2commit, dstRepoPath)
+
+    ctx.do()
 
 if __name__ == "__main__":
     ret = main()

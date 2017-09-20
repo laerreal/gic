@@ -18,6 +18,8 @@ __all__ = [
           , "DeleteHead"
           , "CreateTag"
           , "CollectGarbage"
+  , "ActionContext"
+  , "switch_context"
 ]
 
 from shutil import rmtree
@@ -44,6 +46,24 @@ from time import (
     gmtime,
     strftime
 )
+
+current_context = None
+
+def switch_context(ctx):
+    global current_context
+
+    if current_context is ctx:
+        raise RuntimeError("Same action context")
+
+    ret = current_context
+    current_context = ctx
+    return ret
+
+class ActionContext(object):
+    __slots__ = ["actions"]
+
+    def __init__(self):
+        self.actions = []
 
 def dt(ts, off):
     dt = gmtime(ts - off)

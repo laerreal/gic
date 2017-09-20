@@ -134,17 +134,15 @@ def main():
 
     queue = sorted(sha2commit.values(), key = lambda c : c.num)
 
-    actions = [
-        RemoveDirectory(path = dstRepoPath),
-        ProvideDirectory(path = dstRepoPath),
-        InitRepo(path = dstRepoPath),
-        AddRemote(
-            path = dstRepoPath,
-            name = CLONED_REPO_NAME,
-            address = srcRepoPath
-        ),
-        FetchRemote(path = dstRepoPath, name = CLONED_REPO_NAME)
-    ]
+    RemoveDirectory(path = dstRepoPath)
+    ProvideDirectory(path = dstRepoPath)
+    InitRepo(path = dstRepoPath)
+    AddRemote(
+        path = dstRepoPath,
+        name = CLONED_REPO_NAME,
+        address = srcRepoPath
+    )
+    FetchRemote(path = dstRepoPath, name = CLONED_REPO_NAME)
 
     iqueue = iter(queue)
 
@@ -159,11 +157,9 @@ def main():
 
         if prev_c is not None:
             if not c.parents:
-                actions.append(
-                    CheckoutOrphan(
-                        name = orphan(orphan_counter),
-                        path = dstRepoPath
-                    )
+                CheckoutOrphan(
+                    name = orphan(orphan_counter),
+                    path = dstRepoPath
                 )
                 orphan_counter += 1
             else:
@@ -171,16 +167,16 @@ def main():
                 main_stream_sha = m.parents[0].hexsha
                 if main_stream_sha != prev_c.sha:
                     # jump to main stream commit
-                    actions.append(CheckoutCloned(
+                    CheckoutCloned(
                         path = dstRepoPath,
                         commit = sha2commit[main_stream_sha]
-                    ))
+                    )
 
         if len(c.parents) > 1:
             subtree_prefix = None if len(c.parents) != 2 else is_subtree(m)
 
             if subtree_prefix is None:
-                actions.append(MergeCloned(
+                MergeCloned(
                     path = dstRepoPath,
                     commit = c,
                     author = m.author,
@@ -194,9 +190,9 @@ def main():
                     extra_parents = [
                         sha2commit[p.hexsha] for p in m.parents[1:]
                     ]
-                ))
+                )
             else:
-                actions.append(SubtreeMerge(
+                SubtreeMerge(
                     path = dstRepoPath,
                     commit = c,
                     author = m.author,
@@ -208,47 +204,42 @@ def main():
                     message = m.message,
                     parent = sha2commit[m.parents[1].hexsha],
                     prefix = subtree_prefix
-                ))
+                )
 
         else:
-            actions.append(CherryPick(
+            CherryPick(
                 path = dstRepoPath,
                 commit = c,
                 committer = m.committer,
                 message = m.message,
                 committed_date = m.committed_date,
                 committer_tz_offset = m.committer_tz_offset
-            ))
+            )
 
         for h in c.heads:
             if h.path.startswith("refs/heads/"):
-                actions.append(CreateHead(
+                CreateHead(
                     path = dstRepoPath,
                     name = h.name
-                ))
+                )
             elif h.path.startswith("refs/tags/"):
-                actions.append(CreateTag(
+                CreateTag(
                     path = dstRepoPath,
                     name = h.name
-                ))
+                )
 
         prev_c = c
 
     # delete temporary branch names
     for o in range(0, orphan_counter):
-        actions.append(DeleteHead(
-            path = dstRepoPath,
-            name = orphan(o)
-        ))
+        DeleteHead(path = dstRepoPath, name = orphan(o))
 
-    actions.extend([
-        CheckoutCloned(
-            path = dstRepoPath,
-            commit = sha2commit[repo.head.commit.hexsha]
-        ),
-        RemoveRemote(path = dstRepoPath, name = CLONED_REPO_NAME),
-        CollectGarbage(path = dstRepoPath)
-    ])
+    CheckoutCloned(
+        path = dstRepoPath,
+        commit = sha2commit[repo.head.commit.hexsha]
+    )
+    RemoveRemote(path = dstRepoPath, name = CLONED_REPO_NAME)
+    CollectGarbage(path = dstRepoPath)
 
     ctx = switch_context(None)
 

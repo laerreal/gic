@@ -250,7 +250,9 @@ def main():
         CollectGarbage(path = dstRepoPath)
     ])
 
-    for a in actions:
+    ctx = switch_context(None)
+
+    for a in ctx.actions:
         try:
             a()
         except:

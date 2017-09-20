@@ -64,20 +64,20 @@ def switch_context(ctx):
     return ret
 
 class ActionContext(object):
-    __slots__ = ["actions", "current_action"]
+    __slots__ = ["_actions", "current_action"]
 
     def __init__(self, current_action = -1):
-        self.actions = []
+        self._actions = []
         self.current_action = current_action
 
     def do(self):
         ca = self.current_action
         if ca < 0: # start
-            i = enumerate(self.actions)
-        elif ca >= len(self.actions): # all actions were done
+            i = enumerate(self._actions)
+        elif ca >= len(self._actions): # all actions were done
             return
         else: # continue the work
-            i = enumerate(self.actions[ca:], ca)
+            i = enumerate(self._actions[ca:], ca)
 
         for idx, a in i:
             try:
@@ -128,7 +128,7 @@ class Action(sloted):
         if current_context is None:
             raise RuntimeError("No action context set")
 
-        current_context.actions.append(self)
+        current_context._actions.append(self)
         self._ctx = current_context
 
     q = queue

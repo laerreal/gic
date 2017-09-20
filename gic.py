@@ -205,7 +205,7 @@ def main():
                     authored_date = m.authored_date,
                     author_tz_offset = m.author_tz_offset,
                     message = m.message,
-                    parent = m.parents[1].hexsha,
+                    parent_sha = m.parents[1].hexsha,
                     prefix = subtree_prefix
                 )
 

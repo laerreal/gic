@@ -296,7 +296,7 @@ class MergeCloned(GitAction):
 class SubtreeMerge(GitAction):
     __slots__ = ["commit_sha", "author_name", "author_email", "committer_name",
                  "committer_email", "committed_date", "authored_date",
-                 "message", "parent", "prefix", "committer_tz_offset",
+                 "message", "parent_sha", "prefix", "committer_tz_offset",
                  "author_tz_offset"]
 
     def __call__(self):
@@ -317,7 +317,7 @@ class SubtreeMerge(GitAction):
         commit = sha2commit[self.commit_sha]
         message = self.message
         prefix = self.prefix
-        parent = sha2commit[self.parent]
+        parent = sha2commit[self.parent_sha]
 
         # TODO --allow-unrelated-histories for Git >= 2.9
         self.git("merge", "-s", "ours", "--no-commit",

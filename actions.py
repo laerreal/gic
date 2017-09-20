@@ -75,7 +75,10 @@ def dt(ts, off):
     return ret
 
 class Action(object):
-    def __init__(self, **kw):
+    def __init__(self, queue = True, ** kw):
+        """
+        @queue: auto add the action to queue of the current action context
+        """
         for klass in type(self).__mro__:
             try:
                 slots = klass.__slots__
@@ -84,6 +87,19 @@ class Action(object):
 
             for attr in slots:
                 setattr(self, attr, kw[attr])
+
+        if queue:
+            self.q()
+
+    def queue(self):
+        global current_context
+
+        if current_context is None:
+            raise RuntimeError("No action context set")
+
+        current_context.actions.append(self)
+
+    q = queue
 
     def __call__(self):
         raise NotImplementedError()

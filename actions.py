@@ -63,12 +63,16 @@ def switch_context(ctx):
     current_context = ctx
     return ret
 
-class ActionContext(object):
+class ActionContext(sloted):
     __slots__ = ["_actions", "current_action"]
 
-    def __init__(self, current_action = -1):
+    def __init__(self, current_action = -1, **kw):
+        super(ActionContext, self).__init__(
+            current_action = current_action,
+            **kw
+        )
+
         self._actions = []
-        self.current_action = current_action
 
     def do(self):
         ca = self.current_action

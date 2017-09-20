@@ -130,6 +130,8 @@ def main():
     print("The repository will be cloned to: " + dstRepoPath)
 
     # Planing
+    switch_context(ActionContext())
+
     queue = sorted(sha2commit.values(), key = lambda c : c.num)
 
     actions = [

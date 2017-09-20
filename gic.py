@@ -109,7 +109,7 @@ def main():
 
     ctx = GitContext()
     repo = Repo(srcRepoPath)
-    sha2commit = {}
+    sha2commit = ctx.sha2commit
     callco(
         GICCommitDesc.co_build_git_graph(repo, sha2commit,
             skip_remotes = True,

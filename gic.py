@@ -8,8 +8,6 @@ from argparse import (
     ArgumentParser
 )
 from actions import *
-from traceback import print_exc
-from sys import stdout
 from os.path import isdir
 
 class GICCommitDesc(CommitDesc):
@@ -243,13 +241,7 @@ def main():
 
     ctx = switch_context(None)
 
-    for a in ctx.actions:
-        try:
-            a()
-        except:
-            print("Failed on %s" % a)
-            print_exc(file = stdout)
-            return
+    ctx.do()
 
     for c in sha2commit.values():
         if not c.processed:

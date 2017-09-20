@@ -49,6 +49,7 @@ from time import (
 )
 from traceback import print_exc
 from sys import stdout
+from common import sloted
 
 current_context = None
 
@@ -105,23 +106,14 @@ def dt(ts, off):
         ret = ret + ("-%02d%02d" % (off / 3600, (off / 60) % 60))
     return ret
 
-class Action(object):
+class Action(sloted):
     __slots__ = ["_ctx"]
 
     def __init__(self, queue = True, ** kw):
         """
         @queue: auto add the action to queue of the current action context
         """
-        for klass in type(self).__mro__:
-            try:
-                slots = klass.__slots__
-            except AttributeError:
-                continue
-
-            for attr in slots:
-                if attr.startswith("_"):
-                    continue
-                setattr(self, attr, kw[attr])
+        super(Action, self).__init__(**kw)
 
         self._ctx = None
         if queue:

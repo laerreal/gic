@@ -63,19 +63,30 @@ def switch_context(ctx):
     return ret
 
 class ActionContext(object):
-    __slots__ = ["actions"]
+    __slots__ = ["actions", "current_action"]
 
-    def __init__(self):
+    def __init__(self, current_action = -1):
         self.actions = []
+        self.current_action = current_action
 
     def do(self):
-        for a in self.actions:
+        ca = self.current_action
+        if ca < 0: # start
+            i = enumerate(self.actions)
+        elif ca >= len(self.actions): # all actions were done
+            return
+        else: # continue the work
+            i = enumerate(self.actions[ca:], ca)
+
+        for idx, a in i:
             try:
                 a()
             except:
                 print("Failed on %s" % a)
                 print_exc(file = stdout)
                 break
+
+        self.current_action = idx + 1
 
 class GitContext(ActionContext):
     __slots__ = ["sha2commit"]

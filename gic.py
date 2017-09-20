@@ -168,7 +168,7 @@ def main():
                     # jump to main stream commit
                     CheckoutCloned(
                         path = dstRepoPath,
-                        commit = sha2commit[main_stream_sha]
+                        commit = main_stream_sha
                     )
 
         if len(c.parents) > 1:
@@ -177,7 +177,7 @@ def main():
             if subtree_prefix is None:
                 MergeCloned(
                     path = dstRepoPath,
-                    commit = c,
+                    commit = c.sha,
                     author_name = m.author.name.encode("utf-8"),
                     author_email = m.author.email,
                     committer_name = m.committer.name.encode("utf-8"),
@@ -195,7 +195,7 @@ def main():
             else:
                 SubtreeMerge(
                     path = dstRepoPath,
-                    commit = c,
+                    commit = c.sha,
                     author_name = m.author.name.encode("utf-8"),
                     author_email = m.author.email,
                     committer_name = m.committer.name.encode("utf-8"),
@@ -212,7 +212,7 @@ def main():
         else:
             CherryPick(
                 path = dstRepoPath,
-                commit = c,
+                commit = c.sha,
                 committer_name = m.committer.name.encode("utf-8"),
                 committer_email = m.committer.email,
                 message = m.message,
@@ -240,7 +240,7 @@ def main():
 
     CheckoutCloned(
         path = dstRepoPath,
-        commit = sha2commit[repo.head.commit.hexsha]
+        commit = repo.head.commit.hexsha
     )
     RemoveRemote(path = dstRepoPath, name = CLONED_REPO_NAME)
     CollectGarbage(path = dstRepoPath)

@@ -212,7 +212,9 @@ class CheckoutCloned(GitAction):
     __slots__ = ["commit"]
 
     def __call__(self):
-        self.git("checkout", "-f", self.commit.cloned_sha)
+        commit = self._ctx.sha2commit[self.commit]
+
+        self.git("checkout", "-f", commit.cloned_sha)
 
 class CheckoutOrphan(GitAction):
     __slots__ = [ "name" ]
@@ -252,7 +254,7 @@ class MergeCloned(GitAction):
             self.author_tz_offset
         )
 
-        commit = self.commit
+        commit = self._ctx.sha2commit[self.commit]
         message = self.message
 
         try:
@@ -306,7 +308,7 @@ class SubtreeMerge(GitAction):
             self.author_tz_offset
         )
 
-        commit = self.commit
+        commit = self._ctx.sha2commit[self.commit]
         message = self.message
         prefix = self.prefix
 
@@ -362,7 +364,7 @@ class CherryPick(GitAction):
                   "message", "committed_date", "committer_tz_offset"]
 
     def __call__(self):
-        c = self.commit
+        c = self._ctx.sha2commit[self.commit]
 
         # Note that author is set by cherry-pick
         environ["GIT_COMMITTER_DATE"] = dt(

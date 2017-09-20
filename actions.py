@@ -313,13 +313,15 @@ class SubtreeMerge(GitAction):
             self.author_tz_offset
         )
 
-        commit = self._ctx.sha2commit[self.commit_sha]
+        sha2commit = self._ctx.sha2commit
+        commit = sha2commit[self.commit_sha]
         message = self.message
         prefix = self.prefix
+        parent = sha2commit[self.parent]
 
         # TODO --allow-unrelated-histories for Git >= 2.9
         self.git("merge", "-s", "ours", "--no-commit",
-            self.parent.cloned_sha
+            parent.cloned_sha
         )
 
         if exists(".gic"):
@@ -329,7 +331,7 @@ class SubtreeMerge(GitAction):
         self.git("read-tree",
             "--prefix", ".gic/",
             "-u",
-            self.parent.cloned_sha
+            parent.cloned_sha
         )
 
         if exists(prefix):

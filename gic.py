@@ -107,6 +107,7 @@ def main():
 
     print("Building graph of repository: " + srcRepoPath)
 
+    ctx = GitContext()
     repo = Repo(srcRepoPath)
     sha2commit = {}
     callco(
@@ -128,7 +129,7 @@ def main():
     print("The repository will be cloned to: " + dstRepoPath)
 
     # Planing
-    switch_context(ActionContext())
+    switch_context(ctx)
 
     queue = sorted(sha2commit.values(), key = lambda c : c.num)
 
@@ -243,8 +244,6 @@ def main():
     )
     RemoveRemote(path = dstRepoPath, name = CLONED_REPO_NAME)
     CollectGarbage(path = dstRepoPath)
-
-    ctx = switch_context(None)
 
     ctx.do()
 

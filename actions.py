@@ -254,14 +254,19 @@ class MergeCloned(GitAction):
             self.author_tz_offset
         )
 
-        commit = self._ctx.sha2commit[self.commit_sha]
+        sha2commit = self._ctx.sha2commit
+        commit = sha2commit[self.commit_sha]
         message = self.message
+
+        extra_parents = [
+            sha2commit[p] for p in self.extra_parents
+        ]
 
         try:
             self.git("merge",
                 "--no-ff",
                 "-m", message,
-                *[ p.cloned_sha for p in self.extra_parents ]
+                *[ p.cloned_sha for p in extra_parents ]
             )
         except RuntimeError as e:
             # conflicts?

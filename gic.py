@@ -189,7 +189,7 @@ def main():
                     message = m.message,
                     # original parents order is significant
                     extra_parents = [
-                        sha2commit[p.hexsha] for p in m.parents[1:]
+                        p.hexsha for p in m.parents[1:]
                     ]
                 )
             else:

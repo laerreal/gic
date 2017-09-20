@@ -177,8 +177,10 @@ def main():
                 MergeCloned(
                     path = dstRepoPath,
                     commit = c,
-                    author = m.author,
-                    committer = m.committer,
+                    author_name = m.author.name.encode("utf-8"),
+                    author_email = m.author.email,
+                    committer_name = m.committer.name.encode("utf-8"),
+                    committer_email = m.committer.email,
                     committed_date = m.committed_date,
                     committer_tz_offset = m.committer_tz_offset,
                     authored_date = m.authored_date,
@@ -193,8 +195,10 @@ def main():
                 SubtreeMerge(
                     path = dstRepoPath,
                     commit = c,
-                    author = m.author,
-                    committer = m.committer,
+                    author_name = m.author.name.encode("utf-8"),
+                    author_email = m.author.email,
+                    committer_name = m.committer.name.encode("utf-8"),
+                    committer_email = m.committer.email,
                     committed_date = m.committed_date,
                     committer_tz_offset = m.committer_tz_offset,
                     authored_date = m.authored_date,
@@ -208,7 +212,8 @@ def main():
             CherryPick(
                 path = dstRepoPath,
                 commit = c,
-                committer = m.committer,
+                committer_name = m.committer.name.encode("utf-8"),
+                committer_email = m.committer.email,
                 message = m.message,
                 committed_date = m.committed_date,
                 committer_tz_offset = m.committer_tz_offset

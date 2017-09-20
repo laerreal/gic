@@ -90,12 +90,12 @@ class ActionContext(object):
         self.current_action = idx + 1
 
 class GitContext(ActionContext):
-    __slots__ = ["sha2commit"]
+    __slots__ = ["_sha2commit"]
 
     def __init__(self, **kw):
         super(GitContext, self).__init__(**kw)
 
-        self.sha2commit = {}
+        self._sha2commit = {}
 
 def dt(ts, off):
     dt = gmtime(ts - off)
@@ -215,7 +215,7 @@ class CheckoutCloned(GitAction):
     __slots__ = ["commit_sha"]
 
     def __call__(self):
-        commit = self._ctx.sha2commit[self.commit_sha]
+        commit = self._ctx._sha2commit[self.commit_sha]
 
         self.git("checkout", "-f", commit.cloned_sha)
 
@@ -257,7 +257,7 @@ class MergeCloned(GitAction):
             self.author_tz_offset
         )
 
-        sha2commit = self._ctx.sha2commit
+        sha2commit = self._ctx._sha2commit
         commit = sha2commit[self.commit_sha]
         message = self.message
 
@@ -316,7 +316,7 @@ class SubtreeMerge(GitAction):
             self.author_tz_offset
         )
 
-        sha2commit = self._ctx.sha2commit
+        sha2commit = self._ctx._sha2commit
         commit = sha2commit[self.commit_sha]
         message = self.message
         prefix = self.prefix
@@ -374,7 +374,7 @@ class CherryPick(GitAction):
                   "message", "committed_date", "committer_tz_offset"]
 
     def __call__(self):
-        c = self._ctx.sha2commit[self.commit_sha]
+        c = self._ctx._sha2commit[self.commit_sha]
 
         # Note that author is set by cherry-pick
         environ["GIT_COMMITTER_DATE"] = dt(

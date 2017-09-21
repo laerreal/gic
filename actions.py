@@ -104,6 +104,21 @@ class ActionContext(sloted):
     def finished(self):
         return self.current_action >= len(self._actions)
 
+    def __dfs_children__(self):
+        return list(self._actions)
+
+    def __gen_code__(self, g):
+        self.gen_by_slots(g)
+
+        g.line("switch_context(" + g.nameof(self) + ")")
+        g.line()
+        g.write("actions = ")
+        g.pprint(self._actions)
+        g.line()
+        g.line()
+        g.line("for a in actions:")
+        g.line("    a.q()")
+
 class GitContext(ActionContext):
     __slots__ = ["_sha2commit", "src_repo_path", "_origin2cloned"]
 
@@ -132,6 +147,15 @@ class GitContext(ActionContext):
         for sha, cloned_sha in self._origin2cloned.items():
             sha2commit[sha].cloned_sha = cloned_sha
 
+    def __gen_code__(self, g):
+        ActionContext.__gen_code__(self, g)
+        g.line()
+
+        self.__backup_cloned()
+
+        g.write(g.nameof(self) + "._origin2cloned = ")
+        g.pprint(self._origin2cloned)
+        g.line()
 
 def dt(ts, off):
     dt = gmtime(ts - off)
@@ -174,6 +198,12 @@ class Action(sloted):
 
     def __str__(self):
         return type(self).__name__
+
+    def __dfs_children__(self):
+        return []
+
+    def __gen_code__(self, g):
+        self.gen_by_slots(g, queue = False)
 
 class FSAction(Action):
     __slots__ = ["path"]

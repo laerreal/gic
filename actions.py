@@ -93,6 +93,10 @@ class ActionContext(sloted):
 
         self.current_action = idx + 1
 
+    @property
+    def finished(self):
+        return self.current_action >= len(self._actions)
+
 class GitContext(ActionContext):
     __slots__ = ["_sha2commit", "src_repo_path"]
 

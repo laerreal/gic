@@ -105,12 +105,33 @@ class ActionContext(sloted):
         return self.current_action >= len(self._actions)
 
 class GitContext(ActionContext):
-    __slots__ = ["_sha2commit", "src_repo_path"]
+    __slots__ = ["_sha2commit", "src_repo_path", "_origin2cloned"]
 
     def __init__(self, **kw):
         super(GitContext, self).__init__(**kw)
 
         self._sha2commit = {}
+        self._origin2cloned = {}
+
+    def __backup_cloned(self):
+        origin2cloned = {}
+
+        for sha, c in self._sha2commit.items():
+            cloned_sha = c.cloned_sha
+
+            if cloned_sha is None:
+                continue
+
+            origin2cloned[sha] = cloned_sha
+
+        self._origin2cloned = origin2cloned
+
+    def restore_cloned(self):
+        sha2commit = self._sha2commit
+
+        for sha, cloned_sha in self._origin2cloned.items():
+            sha2commit[sha].cloned_sha = cloned_sha
+
 
 def dt(ts, off):
     dt = gmtime(ts - off)

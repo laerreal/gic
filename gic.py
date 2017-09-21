@@ -8,8 +8,26 @@ from argparse import (
     ArgumentParser
 )
 from actions import *
-from os.path import isdir
+from os.path import (
+    isdir,
+    isfile
+)
+from common import PyGenerator
+
+from six import PY2
+if not PY2:
+    def execfile(filename, globals = None, locals = None):
+        f = open(filename, "rb")
+        content = f.read()
+        f.close()
+        obj = compile(content, filename, "exec")
+        exec(content, globals, locals)
+
+from traceback import print_exc
+from sys import stdout
 from os import (
+    rename,
+    unlink,
     getcwd,
     chdir
 )
@@ -94,6 +112,7 @@ def is_subtree(c, acceptable = 4):
     return prefix
 
 CLONED_REPO_NAME = "__cloned__"
+STATE_FILE_NAME = ".gic.py"
 
 def orphan(n):
     return "__orphan__%d" % n
@@ -225,16 +244,41 @@ def main():
     init_cwd = getcwd()
 
     ap = ArgumentParser()
-    ap.add_argument("source", type = arg_type_directory, nargs = 1)
+    ap.add_argument("source", type = arg_type_directory, nargs = "?")
     ap.add_argument("-d", "--destination", type = arg_type_directory, nargs = 1)
 
     args = ap.parse_args()
 
-    srcRepoPath = args.source[0]
+    ctx = None
+    if isfile(STATE_FILE_NAME):
+        loaded = {}
+        try:
+            execfile(STATE_FILE_NAME, globals(), loaded)
+        except:
+            print("Incorrect state file")
+            print_exc(file = stdout)
+        else:
+            for ctx in loaded.values():
+                if isinstance(ctx, GitContext):
+                    break
+            else: # no saved context found among loaded objects
+                ctx = None
+
+    if ctx is None:
+        srcRepoPath = args.source
+
+        if srcRepoPath is None:
+            print("No source repository path was given.")
+            ap.print_help(stdout)
+            return
+
+        ctx = GitContext(src_repo_path = srcRepoPath)
+        switch_context(ctx)
+    else:
+        srcRepoPath = ctx.src_repo_path
 
     print("Building graph of repository: " + srcRepoPath)
 
-    ctx = GitContext(src_repo_path = srcRepoPath)
     repo = Repo(srcRepoPath)
     sha2commit = ctx._sha2commit
     callco(
@@ -246,24 +290,41 @@ def main():
 
     print("Total commits: %d" % len(sha2commit))
 
-    destination = args.destination
-    if destination is None:
-        print("No destination specified. Dry run.")
-        return
+    if ctx.current_action < 0:
+        destination = args.destination
+        if destination is None:
+            print("No destination specified. Dry run.")
+            return
 
-    dstRepoPath = destination[0]
+        dstRepoPath = destination[0]
 
-    print("The repository will be cloned to: " + dstRepoPath)
+        print("The repository will be cloned to: " + dstRepoPath)
 
-    # Planing
-    switch_context(ctx)
+        # Planing
+        plan(repo, sha2commit, dstRepoPath)
+    else:
+        print("The context was loaded. Continuing...")
 
-    plan(repo, sha2commit, dstRepoPath)
+        ctx.restore_cloned()
 
     ctx.do()
 
+    # save results
     if getcwd() != init_cwd:
         chdir(init_cwd)
+
+    if ctx.finished:
+        if isfile(STATE_FILE_NAME):
+            unlink(STATE_FILE_NAME)
+    else:
+        gic_state_f = open(STATE_FILE_NAME + ".tmp", "wb")
+        gen = PyGenerator()
+        gen.serialize(gic_state_f, ctx)
+        gic_state_f.close()
+
+        if isfile(STATE_FILE_NAME):
+            unlink(STATE_FILE_NAME)
+        rename(STATE_FILE_NAME + ".tmp", STATE_FILE_NAME)
 
 if __name__ == "__main__":
     ret = main()

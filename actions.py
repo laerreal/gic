@@ -289,7 +289,7 @@ class MergeCloned(GitAction):
         except RuntimeError as e:
             # conflicts?
             self.git2("diff", "--name-only", "--diff-filter=U")
-            conflicts = self._stdout.strip().split("\n")
+            conflicts = self._stdout.strip().split(b"\n")
 
             if not conflicts:
                 # there is something else...
@@ -297,7 +297,7 @@ class MergeCloned(GitAction):
 
             # get accepted changes from original history
             for c in conflicts:
-                self.git("checkout", commit.sha, c)
+                self.git("checkout", commit.sha, c.decode("utf-8"))
 
             self.git("commit", "-m", message)
 
@@ -309,7 +309,7 @@ class MergeCloned(GitAction):
         del environ["GIT_AUTHOR_DATE"]
 
         self.git2("rev-parse", "HEAD")
-        commit.cloned_sha = self._stdout.split("\n")[0]
+        commit.cloned_sha = self._stdout.split(b"\n")[0]
 
 class SubtreeMerge(GitAction):
     __slots__ = ["commit_sha", "author_name", "author_email", "committer_name",
@@ -382,7 +382,7 @@ class SubtreeMerge(GitAction):
         del environ["GIT_AUTHOR_DATE"]
 
         self.git2("rev-parse", "HEAD")
-        commit.cloned_sha = self._stdout.split("\n")[0]
+        commit.cloned_sha = self._stdout.split(b"\n")[0]
 
 class CherryPick(GitAction):
     __slots__ = ["commit_sha", "committer_name", "committer_email",
@@ -402,7 +402,7 @@ class CherryPick(GitAction):
         try:
             self.git2("cherry-pick", c.sha)
         except RuntimeError as e:
-            if "--allow-empty" not in self._stderr:
+            if b"--allow-empty" not in self._stderr:
                 raise e
 
             self.git("commit", "--allow-empty", "-m", self.message)
@@ -412,7 +412,7 @@ class CherryPick(GitAction):
         del environ["GIT_COMMITTER_EMAIL"]
 
         self.git2("rev-parse", "HEAD")
-        c.cloned_sha = self._stdout.split("\n")[0]
+        c.cloned_sha = self._stdout.split(b"\n")[0]
 
 class CreateHead(GitAction):
     __slots__ = ["name"]

@@ -79,6 +79,7 @@ class ActionContext(sloted):
         if ca < 0: # start
             i = enumerate(self._actions)
         elif ca >= len(self._actions): # all actions were done
+            print("Nothing to do")
             return
         else: # continue the work
             i = enumerate(self._actions[ca:], ca)

@@ -74,15 +74,21 @@ class ActionContext(sloted):
 
         self._actions = []
 
-    def do(self):
+    def do(self, limit = None):
         ca = self.current_action
         if ca < 0: # start
-            i = enumerate(self._actions)
+            if limit is None:
+                i = enumerate(self._actions)
+            else:
+                i = enumerate(self._actions[:limit])
         elif ca >= len(self._actions): # all actions were done
             print("Nothing to do")
             return
-        else: # continue the work
+        # continue the work
+        elif limit is None:
             i = enumerate(self._actions[ca:], ca)
+        else:
+            i = enumerate(self._actions[ca:ca + limit], ca)
 
         for idx, a in i:
             try:

@@ -9,6 +9,10 @@ from argparse import (
 )
 from actions import *
 from os.path import isdir
+from os import (
+    getcwd,
+    chdir
+)
 
 class GICCommitDesc(CommitDesc):
     __slots__ = [
@@ -218,6 +222,8 @@ def plan(repo, sha2commit, dstRepoPath):
 def main():
     print("Git Interactive Cloner")
 
+    init_cwd = getcwd()
+
     ap = ArgumentParser()
     ap.add_argument("source", type = arg_type_directory, nargs = 1)
     ap.add_argument("-d", "--destination", type = arg_type_directory, nargs = 1)
@@ -255,6 +261,9 @@ def main():
     plan(repo, sha2commit, dstRepoPath)
 
     ctx.do()
+
+    if getcwd() != init_cwd:
+        chdir(init_cwd)
 
 if __name__ == "__main__":
     ret = main()

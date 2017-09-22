@@ -16,6 +16,7 @@ __all__ = [
           , "CheckoutCloned"
           , "CheckoutOrphan"
           , "MergeCloned"
+          , "ContinueMerging"
           , "SubtreeMerge"
           , "CherryPick"
           , "CreateHead"
@@ -400,6 +401,25 @@ class MergeCloned(GitAction):
                 self.git("checkout", commit.sha, c.decode("utf-8"))
 
             self.git("commit", "-m", message)
+
+        self.git2("rev-parse", "HEAD")
+        commit.cloned_sha = self._stdout.split(b"\n")[0]
+
+class ContinueMerging(GitAction):
+    __slots__ = ["commit_sha", "message"]
+
+    def __call__(self):
+        self.git2("diff", "--name-only", "--diff-filter=U")
+        conflicts = self._stdout.strip().split(b"\n")
+
+        sha2commit = self._ctx._sha2commit
+        commit = sha2commit[self.commit_sha]
+
+        # get accepted changes for unresolved conflicts from original history
+        for c in conflicts:
+            self.git("checkout", commit.sha, c.decode("utf-8"))
+
+        self.git("commit", "-m", self.message)
 
         self.git2("rev-parse", "HEAD")
         commit.cloned_sha = self._stdout.split(b"\n")[0]

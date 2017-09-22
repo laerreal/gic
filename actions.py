@@ -422,11 +422,12 @@ class MergeCloned(GitAction):
                 # there is something else...
                 raise e
 
-            # get accepted changes from original history
-            for c in conflicts:
-                self.git("checkout", commit.sha, c.decode("utf-8"))
-
-            self.git("commit", "-m", message)
+            ContinueMerging(
+                path = self.path,
+                commit_sha = self.commit_sha,
+                message = message
+            )
+            return
 
         self.git2("rev-parse", "HEAD")
         commit.cloned_sha = self._stdout.split(b"\n")[0]

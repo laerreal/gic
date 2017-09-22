@@ -182,14 +182,6 @@ def plan(repo, sha2commit, dstRepoPath):
                 MergeCloned(
                     path = dstRepoPath,
                     commit_sha = c.sha,
-                    author_name = m.author.name.encode("utf-8"),
-                    author_email = m.author.email,
-                    committer_name = m.committer.name.encode("utf-8"),
-                    committer_email = m.committer.email,
-                    committed_date = m.committed_date,
-                    committer_tz_offset = m.committer_tz_offset,
-                    authored_date = m.authored_date,
-                    author_tz_offset = m.author_tz_offset,
                     message = m.message,
                     # original parents order is significant
                     extra_parents = [
@@ -200,14 +192,6 @@ def plan(repo, sha2commit, dstRepoPath):
                 SubtreeMerge(
                     path = dstRepoPath,
                     commit_sha = c.sha,
-                    author_name = m.author.name.encode("utf-8"),
-                    author_email = m.author.email,
-                    committer_name = m.committer.name.encode("utf-8"),
-                    committer_email = m.committer.email,
-                    committed_date = m.committed_date,
-                    committer_tz_offset = m.committer_tz_offset,
-                    authored_date = m.authored_date,
-                    author_tz_offset = m.author_tz_offset,
                     message = m.message,
                     parent_sha = m.parents[1].hexsha,
                     prefix = subtree_prefix
@@ -217,6 +201,7 @@ def plan(repo, sha2commit, dstRepoPath):
             ResetCommitter()
 
         else:
+            # Note that author is set by cherry-pick
             SetCommitter(
                 committer_name = m.committer.name.encode("utf-8"),
                 committer_email = m.committer.email,
@@ -226,11 +211,7 @@ def plan(repo, sha2commit, dstRepoPath):
             CherryPick(
                 path = dstRepoPath,
                 commit_sha = c.sha,
-                committer_name = m.committer.name.encode("utf-8"),
-                committer_email = m.committer.email,
-                message = m.message,
-                committed_date = m.committed_date,
-                committer_tz_offset = m.committer_tz_offset
+                message = m.message
             )
             ResetCommitter()
 

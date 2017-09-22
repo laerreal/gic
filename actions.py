@@ -344,23 +344,9 @@ class CheckoutOrphan(GitAction):
                 rmtree(file_path)
 
 class MergeCloned(GitAction):
-    __slots__ = ["commit_sha", "author_name", "author_email", "committer_name",
-                 "committer_email", "committed_date", "authored_date",
-                 "message", "extra_parents", "committer_tz_offset",
-                 "author_tz_offset"]
+    __slots__ = ["commit_sha", "message", "extra_parents"]
 
     def __call__(self):
-        environ["GIT_COMMITTER_NAME"] = self.committer_name
-        environ["GIT_COMMITTER_EMAIL"] = self.committer_email
-        environ["GIT_COMMITTER_DATE"] = dt(self.committed_date,
-            self.committer_tz_offset
-        )
-        environ["GIT_AUTHOR_NAME"] = self.author_name
-        environ["GIT_AUTHOR_EMAIL"] = self.author_email
-        environ["GIT_AUTHOR_DATE"] = dt(self.authored_date,
-            self.author_tz_offset
-        )
-
         sha2commit = self._ctx._sha2commit
         commit = sha2commit[self.commit_sha]
         message = self.message
@@ -390,36 +376,13 @@ class MergeCloned(GitAction):
 
             self.git("commit", "-m", message)
 
-        del environ["GIT_COMMITTER_NAME"]
-        del environ["GIT_COMMITTER_EMAIL"]
-        del environ["GIT_COMMITTER_DATE"]
-        del environ["GIT_AUTHOR_NAME"]
-        del environ["GIT_AUTHOR_EMAIL"]
-        del environ["GIT_AUTHOR_DATE"]
-
         self.git2("rev-parse", "HEAD")
         commit.cloned_sha = self._stdout.split(b"\n")[0]
 
 class SubtreeMerge(GitAction):
-    __slots__ = ["commit_sha", "author_name", "author_email", "committer_name",
-                 "committer_email", "committed_date", "authored_date",
-                 "message", "parent_sha", "prefix", "committer_tz_offset",
-                 "author_tz_offset"]
+    __slots__ = ["commit_sha", "message", "parent_sha", "prefix"]
 
     def __call__(self):
-        environ["GIT_COMMITTER_NAME"] = self.committer_name
-        environ["GIT_COMMITTER_EMAIL"] = self.committer_email
-        environ["GIT_COMMITTER_DATE"] = dt(
-            self.committed_date,
-            self.committer_tz_offset
-        )
-        environ["GIT_AUTHOR_NAME"] = self.author_name
-        environ["GIT_AUTHOR_EMAIL"] = self.author_email
-        environ["GIT_AUTHOR_DATE"] = dt(
-            self.authored_date,
-            self.author_tz_offset
-        )
-
         sha2commit = self._ctx._sha2commit
         commit = sha2commit[self.commit_sha]
         message = self.message
@@ -463,30 +426,14 @@ class SubtreeMerge(GitAction):
 
         self.git("commit", "-m", message)
 
-        del environ["GIT_COMMITTER_NAME"]
-        del environ["GIT_COMMITTER_EMAIL"]
-        del environ["GIT_COMMITTER_DATE"]
-        del environ["GIT_AUTHOR_NAME"]
-        del environ["GIT_AUTHOR_EMAIL"]
-        del environ["GIT_AUTHOR_DATE"]
-
         self.git2("rev-parse", "HEAD")
         commit.cloned_sha = self._stdout.split(b"\n")[0]
 
 class CherryPick(GitAction):
-    __slots__ = ["commit_sha", "committer_name", "committer_email",
-                  "message", "committed_date", "committer_tz_offset"]
+    __slots__ = ["commit_sha", "message"]
 
     def __call__(self):
         c = self._ctx._sha2commit[self.commit_sha]
-
-        # Note that author is set by cherry-pick
-        environ["GIT_COMMITTER_DATE"] = dt(
-            self.committed_date,
-            self.committer_tz_offset
-        )
-        environ["GIT_COMMITTER_NAME"] = self.committer_name
-        environ["GIT_COMMITTER_EMAIL"] = self.committer_email
 
         try:
             self.git2("cherry-pick", c.sha)
@@ -495,10 +442,6 @@ class CherryPick(GitAction):
                 raise e
 
             self.git("commit", "--allow-empty", "-m", self.message)
-
-        del environ["GIT_COMMITTER_DATE"]
-        del environ["GIT_COMMITTER_NAME"]
-        del environ["GIT_COMMITTER_EMAIL"]
 
         self.git2("rev-parse", "HEAD")
         c.cloned_sha = self._stdout.split(b"\n")[0]

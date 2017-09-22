@@ -165,6 +165,19 @@ def plan(repo, sha2commit, dstRepoPath):
         if len(c.parents) > 1:
             subtree_prefix = None if len(c.parents) != 2 else is_subtree(m)
 
+            SetAuthor(
+                author_name = m.author.name.encode("utf-8"),
+                author_email = m.author.email,
+                authored_date = m.authored_date,
+                author_tz_offset = m.author_tz_offset
+            )
+            SetCommitter(
+                committer_name = m.committer.name.encode("utf-8"),
+                committer_email = m.committer.email,
+                committed_date = m.committed_date,
+                committer_tz_offset = m.committer_tz_offset
+            )
+
             if subtree_prefix is None:
                 MergeCloned(
                     path = dstRepoPath,
@@ -200,7 +213,16 @@ def plan(repo, sha2commit, dstRepoPath):
                     prefix = subtree_prefix
                 )
 
+            ResetAuthor()
+            ResetCommitter()
+
         else:
+            SetCommitter(
+                committer_name = m.committer.name.encode("utf-8"),
+                committer_email = m.committer.email,
+                committed_date = m.committed_date,
+                committer_tz_offset = m.committer_tz_offset
+            )
             CherryPick(
                 path = dstRepoPath,
                 commit_sha = c.sha,
@@ -210,6 +232,7 @@ def plan(repo, sha2commit, dstRepoPath):
                 committed_date = m.committed_date,
                 committer_tz_offset = m.committer_tz_offset
             )
+            ResetCommitter()
 
         for h in c.heads:
             if h.path.startswith("refs/heads/"):

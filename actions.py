@@ -3,6 +3,10 @@ __all__ = [
       , "FSAction"
           , "RemoveDirectory"
           , "ProvideDirectory"
+      , "SetCommitter"
+      , "ResetCommitter"
+      , "SetAuthor"
+      , "ResetAuthor"
       , "GitAction"
           , "InitRepo"
           , "RemoteAction"
@@ -216,6 +220,40 @@ class RemoveDirectory(FSAction):
 class ProvideDirectory(FSAction):
     def __call__(self):
         makedirs(self.path)
+
+class SetCommitter(Action):
+    __slots__ = ["committer_name", "committer_email", "committed_date",
+                 "committer_tz_offset"]
+
+    def __call__(self):
+        environ["GIT_COMMITTER_NAME"] = self.committer_name
+        environ["GIT_COMMITTER_EMAIL"] = self.committer_email
+        environ["GIT_COMMITTER_DATE"] = dt(self.committed_date,
+            self.committer_tz_offset
+        )
+
+class ResetCommitter(Action):
+    def __call__(self):
+        del environ["GIT_COMMITTER_NAME"]
+        del environ["GIT_COMMITTER_EMAIL"]
+        del environ["GIT_COMMITTER_DATE"]
+
+class SetAuthor(Action):
+    __slots__ = ["author_name", "author_email", "authored_date",
+                 "author_tz_offset"]
+
+    def __call__(self):
+        environ["GIT_AUTHOR_NAME"] = self.author_name
+        environ["GIT_AUTHOR_EMAIL"] = self.author_email
+        environ["GIT_AUTHOR_DATE"] = dt(self.authored_date,
+            self.author_tz_offset
+        )
+
+class ResetAuthor(Action):
+    def __call__(self):
+        del environ["GIT_AUTHOR_NAME"]
+        del environ["GIT_AUTHOR_EMAIL"]
+        del environ["GIT_AUTHOR_DATE"]
 
 class GitAction(Action):
     __slots__ = ["path", "_stdout", "_stderr"]

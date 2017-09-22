@@ -109,16 +109,20 @@ class ActionContext(sloted):
         self.interrupted = False
         self._doing = True
 
-        for idx, a in i:
+        while not self.interrupted:
+            # This construction allows to switch i from within loop body. While
+            # the same is wrong for constructions like `for idx, a in i:`.
+            try:
+                idx, a = next(i)
+            except StopIteration:
+                break
+
             try:
                 a()
             except:
                 print("Failed on %s" % a)
                 print_exc(file = stdout)
                 return False
-
-            if self.interrupted:
-                break
 
         self._doing = False
         self.current_action = idx + 1

@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 
-from co_dispatcher import callco
 from git_tools import CommitDesc
 from git import Repo
 from argparse import (
@@ -12,7 +11,10 @@ from os.path import (
     isdir,
     isfile
 )
-from common import PyGenerator
+from common import (
+    PyGenerator,
+    callco
+)
 
 from six import PY2
 if not PY2:

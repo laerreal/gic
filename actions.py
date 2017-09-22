@@ -115,13 +115,15 @@ class ActionContext(sloted):
             except:
                 print("Failed on %s" % a)
                 print_exc(file = stdout)
-                break
+                return False
 
             if self.interrupted:
                 break
 
         self._doing = False
         self.current_action = idx + 1
+
+        return True
 
     @property
     def finished(self):

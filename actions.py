@@ -234,9 +234,13 @@ class SetCommitter(Action):
 
 class ResetCommitter(Action):
     def __call__(self):
-        del environ["GIT_COMMITTER_NAME"]
-        del environ["GIT_COMMITTER_EMAIL"]
-        del environ["GIT_COMMITTER_DATE"]
+        try:
+            del environ["GIT_COMMITTER_NAME"]
+            del environ["GIT_COMMITTER_EMAIL"]
+            del environ["GIT_COMMITTER_DATE"]
+        except KeyError:
+            # If process was interrupted the env. var. values are lost.
+            pass
 
 class SetAuthor(Action):
     __slots__ = ["author_name", "author_email", "authored_date",
@@ -251,9 +255,12 @@ class SetAuthor(Action):
 
 class ResetAuthor(Action):
     def __call__(self):
-        del environ["GIT_AUTHOR_NAME"]
-        del environ["GIT_AUTHOR_EMAIL"]
-        del environ["GIT_AUTHOR_DATE"]
+        try:
+            del environ["GIT_AUTHOR_NAME"]
+            del environ["GIT_AUTHOR_EMAIL"]
+            del environ["GIT_AUTHOR_DATE"]
+        except KeyError:
+            pass
 
 class GitAction(Action):
     __slots__ = ["path", "_stdout", "_stderr"]

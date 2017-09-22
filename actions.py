@@ -68,7 +68,7 @@ def switch_context(ctx):
     return ret
 
 class ActionContext(sloted):
-    __slots__ = ["_actions", "current_action", "interrupted"]
+    __slots__ = ["_actions", "current_action", "interrupted", "_doing"]
 
     def __init__(self,
         current_action = -1,
@@ -82,6 +82,7 @@ class ActionContext(sloted):
         )
 
         self._actions = []
+        self._doing = False
 
     def interrupt(self):
         self.interrupted = True
@@ -103,6 +104,7 @@ class ActionContext(sloted):
             i = enumerate(self._actions[ca:ca + limit], ca)
 
         self.interrupted = False
+        self._doing = True
 
         for idx, a in i:
             try:
@@ -115,6 +117,7 @@ class ActionContext(sloted):
             if self.interrupted:
                 break
 
+        self._doing = False
         self.current_action = idx + 1
 
     @property

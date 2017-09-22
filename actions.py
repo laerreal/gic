@@ -69,7 +69,8 @@ def switch_context(ctx):
     return ret
 
 class ActionContext(sloted):
-    __slots__ = ["_actions", "current_action", "interrupted", "_doing"]
+    __slots__ = ["_actions", "current_action", "interrupted", "_doing",
+                 "_extra_actions"]
 
     def __init__(self,
         current_action = -1,
@@ -83,6 +84,7 @@ class ActionContext(sloted):
         )
 
         self._actions = []
+        self._extra_actions = []
         self._doing = False
 
     def interrupt(self):
@@ -90,6 +92,7 @@ class ActionContext(sloted):
 
     def do(self, limit = None):
         actions = self._actions
+        extra_actions = self._extra_actions
 
         ca = self.current_action
         if ca < 0: # start
@@ -123,6 +126,19 @@ class ActionContext(sloted):
                 print("Failed on %s" % a)
                 print_exc(file = stdout)
                 return False
+
+            if extra_actions:
+                next_idx = idx + 1
+
+                while extra_actions:
+                    a = extra_actions.pop()
+                    actions.insert(next_idx, a)
+
+                if limit is None:
+                    i = enumerate(actions[next_idx:], next_idx)
+                else:
+                    rest = limit - (next_idx - ca)
+                    i = enumerate(actions[next_idx:next_idx + rest], next_idx)
 
         self._doing = False
         self.current_action = idx + 1
@@ -217,7 +233,11 @@ class Action(sloted):
         if current_context is None:
             raise RuntimeError("No action context set")
 
-        current_context._actions.append(self)
+        if current_context._doing:
+            current_context._extra_actions.append(self)
+        else:
+            current_context._actions.append(self)
+
         self._ctx = current_context
 
     q = queue

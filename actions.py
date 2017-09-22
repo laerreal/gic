@@ -88,20 +88,22 @@ class ActionContext(sloted):
         self.interrupted = True
 
     def do(self, limit = None):
+        actions = self._actions
+
         ca = self.current_action
         if ca < 0: # start
             if limit is None:
-                i = enumerate(self._actions)
+                i = enumerate(actions)
             else:
-                i = enumerate(self._actions[:limit])
-        elif ca >= len(self._actions): # all actions were done
+                i = enumerate(actions[:limit])
+        elif ca >= len(actions): # all actions were done
             print("Nothing to do")
             return
         # continue the work
         elif limit is None:
-            i = enumerate(self._actions[ca:], ca)
+            i = enumerate(actions[ca:], ca)
         else:
-            i = enumerate(self._actions[ca:ca + limit], ca)
+            i = enumerate(actions[ca:ca + limit], ca)
 
         self.interrupted = False
         self._doing = True

@@ -68,15 +68,23 @@ def switch_context(ctx):
     return ret
 
 class ActionContext(sloted):
-    __slots__ = ["_actions", "current_action"]
+    __slots__ = ["_actions", "current_action", "interrupted"]
 
-    def __init__(self, current_action = -1, **kw):
+    def __init__(self,
+        current_action = -1,
+        interrupted = False,
+        ** kw
+    ):
         super(ActionContext, self).__init__(
             current_action = current_action,
+            interrupted = interrupted,
             **kw
         )
 
         self._actions = []
+
+    def interrupt(self):
+        self.interrupted = True
 
     def do(self, limit = None):
         ca = self.current_action
@@ -94,12 +102,17 @@ class ActionContext(sloted):
         else:
             i = enumerate(self._actions[ca:ca + limit], ca)
 
+        self.interrupted = False
+
         for idx, a in i:
             try:
                 a()
             except:
                 print("Failed on %s" % a)
                 print_exc(file = stdout)
+                break
+
+            if self.interrupted:
                 break
 
         self.current_action = idx + 1

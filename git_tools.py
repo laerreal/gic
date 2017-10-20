@@ -15,6 +15,8 @@ class CommitDesc(object):
 
         # serial number according to the topological sorting
         self.num = None
+        # roots bit mask
+        self.roots = 0
 
     @classmethod
     def co_build_git_graph(klass, repo, commit_desc_nodes,
@@ -33,6 +35,10 @@ class CommitDesc(object):
         # (parent, child), where parent is instance of
         # git.Commit, child is instance of CommitDesc
         build_stack = []
+        # Each history root is represented by a bit in CommitDesc.roots of each
+        # commit. root_bit is value for next found root.
+        root_bit = 1
+
         for head in repo.references:
             if skip_remotes and head.path.startswith("refs/remotes/"):
                 continue
@@ -69,11 +75,17 @@ class CommitDesc(object):
                         # current edge parent is an elder commit in the tree,
                         # that is why we should enumerate starting from it
                         to_enum = parent_desc
+                        # parent is a root
+                        parent_desc.roots = root_bit
+                        root_bit <<= 1
                 else:
                     # the existence of parent_desc means that parent has been
                     # enumerated before. Hence, we starts enumeration from
                     # it's child
                     to_enum = child_commit_desc
+                    # This parent-to-child link is just being created. So, the
+                    # root bits had not been propagated during enumeration
+                    to_enum.roots |= parent_desc.roots
                 finally:
                     parent_desc.children.append(child_commit_desc)
                     child_commit_desc.parents.append(parent_desc)
@@ -98,13 +110,22 @@ class CommitDesc(object):
                     if len(e.parents) == len(repo.commit(e.sha).parents):
                         e.num = n
                         n = n + 1
+
+                        roots = e.roots # cache the value
+
                         # according to the algorithm, only one child
                         # have no number. Other children either have
                         # been enumerated already or are not added yet
-                        for c in e.children:
+                        chiter = iter(e.children)
+                        for c in chiter:
+                            c.roots |= roots
                             if c.num is None:
                                 to_enum = c
                                 break
+
+                        # but roots must be propagated to all children
+                        for c in chiter:
+                            c.roots |= roots
 
                     if i2y <= 0:
                         yield True

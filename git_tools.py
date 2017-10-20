@@ -29,9 +29,9 @@ class CommitDesc(object):
         # to_enum is used during topological sorting
         # it contains commit to enumerate
         to_enum = None
-        # build_stack contains eges represented by tuples
+        # build_stack contains edges represented by tuples
         # (parent, child), where parent is instance of
-        # git.Commit, child is instance of QemuCommitDesc
+        # git.Commit, child is instance of CommitDesc
         build_stack = []
         for head in repo.references:
             if skip_remotes and head.path.startswith("refs/remotes/"):
@@ -90,8 +90,8 @@ class CommitDesc(object):
                 while to_enum is not None:
                     e = to_enum
                     to_enum = None
-                    # if the number of parents in the commit_desc_nodes
-                    # is equal to the number of parents in the repo,
+                    # if the number of parents in the CommitDesc
+                    # is equal to the number of parents in the git.Commit,
                     # then all parents were numbered (added) earlier
                     # according to the graph building algorithm,
                     # else we cannot assign number to the commit yet

@@ -1,5 +1,6 @@
 __all__ = [
     "PyGenerator"
+  , "pythonize"
 ]
 
 from six import (
@@ -303,6 +304,12 @@ class PyGenerator(object):
             self.write("None")
         else:
             self.write(self.obj2name[val])
+
+def pythonize(root, file_name):
+    f = open(file_name, "wb")
+    g = PyGenerator()
+    g.serialize(f, root)
+    f.close()
 
 if __name__ == "__main__":
     g = PyGenerator()

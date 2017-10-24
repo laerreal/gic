@@ -52,8 +52,7 @@ class GICCommitDesc(CommitDesc):
 
 def arg_type_directory(string):
     if not isdir(string):
-        raise ArgumentTypeError(
-            "{} is not directory".format(string))
+        raise ArgumentTypeError("'%s' is not a directory" % string)
     return string
 
 def arg_type_output_file(string):

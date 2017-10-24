@@ -102,7 +102,7 @@ class ActionContext(sloted):
                 i = enumerate(actions[:limit])
         elif ca >= len(actions): # all actions were done
             print("Nothing to do")
-            return
+            return True
         # continue the work
         elif limit is None:
             i = enumerate(actions[ca:], ca)

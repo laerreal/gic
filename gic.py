@@ -32,11 +32,14 @@ from traceback import (
 )
 from sys import stdout
 from os import (
+    mkdir,
+    rmdir,
     rename,
     unlink,
     getcwd,
     chdir
 )
+from itertools import count
 
 class GICCommitDesc(CommitDesc):
     __slots__ = [
@@ -53,6 +56,38 @@ class GICCommitDesc(CommitDesc):
 def arg_type_directory(string):
     if not isdir(string):
         raise ArgumentTypeError("'%s' is not a directory" % string)
+    return string
+
+def arg_type_new_directory(string):
+    parent, _ = split(string)
+    if not isdir(parent):
+        raise ArgumentTypeError("Cannot create directory '%s' because %s is "
+            "not a directory" % (string, parent)
+        )
+
+    if isdir(string):
+        # The directory already exists but checking access rights by its
+        # deletion is not a good way. Hence, try to create and delete other
+        # directory.
+        for i in count():
+            name = string + str(i)
+            if not isdir(name):
+                break
+            # else: Such directory exists too, try next.
+    else:
+        # no such directory, try to create one
+        name = string
+
+    try:
+        mkdir(name)
+    except:
+        # There is no confusion between `name` and `string`, see above!
+        raise ArgumentTypeError("Cannot create directory '%s', underlying "
+            "error:\n%s" % (string, format_exc())
+        )
+    else:
+        rmdir(name)
+
     return string
 
 def arg_type_output_file(string):

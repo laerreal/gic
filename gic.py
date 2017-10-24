@@ -319,7 +319,7 @@ def main():
 
     ap = ArgumentParser()
     ap.add_argument("source", type = arg_type_directory, nargs = "?")
-    ap.add_argument("-d", "--destination", type = arg_type_directory, nargs = 1)
+    ap.add_argument("-d", "--destination", type = arg_type_new_directory)
     ap.add_argument("-r", "--result-state", type = arg_type_output_file)
 
     args = ap.parse_args()
@@ -371,7 +371,7 @@ def main():
             print("No destination specified. Dry run.")
             return
 
-        dstRepoPath = destination[0]
+        dstRepoPath = destination
 
         print("The repository will be cloned to: " + dstRepoPath)
 

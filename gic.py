@@ -187,7 +187,7 @@ STATE_FILE_NAME = ".gic.py"
 def orphan(n):
     return "__orphan__%d" % n
 
-def plan(repo, sha2commit, dstRepoPath):
+def plan(repo, sha2commit, dstRepoPath, main_stream_bits = 0):
     srcRepoPath = repo.working_dir
 
     queue = sorted(sha2commit.values(), key = lambda c : c.num)
@@ -210,6 +210,11 @@ def plan(repo, sha2commit, dstRepoPath):
 
     for c in iqueue:
         c.processed = True
+
+        if main_stream_bits and not (c.roots & main_stream_bits):
+            # this commit will be used as is
+            c.cloned_sha = c.sha
+            continue
 
         m = repo.commit(c.sha)
 
@@ -341,6 +346,15 @@ def main():
     ap.add_argument("source", type = arg_type_directory, nargs = "?")
     ap.add_argument("-d", "--destination", type = arg_type_new_directory)
     ap.add_argument("-r", "--result-state", type = arg_type_output_file)
+    ap.add_argument("-m", "--main-stream",
+        type = arg_type_SHA1_lower,
+        metavar = "SHA1",
+        help = """\
+Set main stream by SHA1 of one of main stream commits. Only main stream commits
+will be cloned. Other commits will be taken as is. A commit belongs to main
+stream if it is a descendant of the given commit or both have at least one
+common ancestor. Commonly, SHA1 corresponds to main stream initial commit."""
+    )
 
     args = ap.parse_args()
 
@@ -393,10 +407,18 @@ def main():
 
         dstRepoPath = destination
 
+        ms = args.main_stream
+        if ms:
+            ms_bits = sha2commit[ms].roots
+        else:
+            ms_bits = 0
+
         print("The repository will be cloned to: " + dstRepoPath)
 
         # Planing
-        plan(repo, sha2commit, dstRepoPath)
+        plan(repo, sha2commit, dstRepoPath,
+            main_stream_bits = ms_bits
+        )
     else:
         print("The context was loaded. Continuing...")
 

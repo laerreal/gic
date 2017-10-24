@@ -12,7 +12,7 @@ from os.path import (
     isfile
 )
 from common import (
-    PyGenerator,
+    pythonize,
     callco
 )
 
@@ -323,10 +323,7 @@ def main():
         if isfile(STATE_FILE_NAME):
             unlink(STATE_FILE_NAME)
     else:
-        gic_state_f = open(STATE_FILE_NAME + ".tmp", "wb")
-        gen = PyGenerator()
-        gen.serialize(gic_state_f, ctx)
-        gic_state_f.close()
+        pythonize(ctx, STATE_FILE_NAME + ".tmp")
 
         if isfile(STATE_FILE_NAME):
             unlink(STATE_FILE_NAME)

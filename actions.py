@@ -91,6 +91,12 @@ class ActionContext(sloted):
         self.interrupted = True
 
     def do(self, limit = None):
+        """ Perform actions until all actions finished or limit is exceeded or
+        exception is raised.
+
+        limit
+            Set maximum number of actions to perform. None means unlimited.
+        """
         actions = self._actions
         extra_actions = self._extra_actions
 

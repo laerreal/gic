@@ -8,6 +8,7 @@ from argparse import (
 )
 from actions import *
 from os.path import (
+    split,
     isdir,
     isfile
 )
@@ -25,7 +26,10 @@ if not PY2:
         obj = compile(content, filename, "exec")
         exec(content, globals, locals)
 
-from traceback import print_exc
+from traceback import (
+    print_exc,
+    format_exc
+)
 from sys import stdout
 from os import (
     rename,
@@ -50,6 +54,36 @@ def arg_type_directory(string):
     if not isdir(string):
         raise ArgumentTypeError(
             "{} is not directory".format(string))
+    return string
+
+def arg_type_output_file(string):
+    directory, _ = split(string)
+    if not isdir(directory):
+        raise ArgumentTypeError("Cannot create file '%s' because '%s' is not "
+            "a directory" % (string, directory)
+        )
+
+    if isfile(string):
+        # file already exists, try to open it for writing
+        try:
+            open(string, "ab+").close()
+        except:
+            raise ArgumentTypeError(
+                "Cannot write to existing file '%s', underlying error:\n%s" % (
+                    string, format_exc()
+                )
+            )
+    else:
+        # file does not exist, try to create it
+        try:
+            open(string, "wb").close()
+        except:
+            raise ArgumentTypeError("Cannot create file '%s', underlying "
+                "error:\n%s" % (string, format_exc())
+            )
+        else:
+            unlink(string)
+
     return string
 
 def is_subtree(c, acceptable = 4):

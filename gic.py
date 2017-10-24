@@ -286,6 +286,7 @@ def main():
     ap = ArgumentParser()
     ap.add_argument("source", type = arg_type_directory, nargs = "?")
     ap.add_argument("-d", "--destination", type = arg_type_directory, nargs = 1)
+    ap.add_argument("-r", "--result-state", type = arg_type_output_file)
 
     args = ap.parse_args()
 
@@ -362,6 +363,10 @@ def main():
         if isfile(STATE_FILE_NAME):
             unlink(STATE_FILE_NAME)
         rename(STATE_FILE_NAME + ".tmp", STATE_FILE_NAME)
+
+    rs = args.result_state
+    if rs:
+        pythonize(ctx, rs)
 
 if __name__ == "__main__":
     ret = main()

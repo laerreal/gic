@@ -182,7 +182,7 @@ def is_subtree(c, acceptable = 4):
     return prefix
 
 CLONED_REPO_NAME = "__cloned__"
-STATE_FILE_NAME = ".gic.py"
+STATE_FILE_NAME = ".gic-state.py"
 
 def orphan(n):
     return "__orphan__%d" % n

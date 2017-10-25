@@ -441,18 +441,32 @@ class ContinueCommitting(GitAction):
     __slots__ = ["commit_sha"]
 
     def __call__(self):
-        self.git2("diff", "--name-only", "--diff-filter=U")
-        # get conflicts skipping empty lines
-        conflicts = [ n for n in self._stdout.strip().split(b"\n") if n ]
-
         sha2commit = self._ctx._sha2commit
         commit = sha2commit[self.commit_sha]
 
-        # get accepted changes for unresolved conflicts from original history
-        for c in conflicts:
-            self.git("checkout", commit.sha, c.decode("utf-8"))
+        # The behavior differs for merge commit completion and existing commit
+        # overwriting.
+        # Determine kind of commit to continue by presence of MERGE_MSG file.
+        # Note that cherry picked commits with conflicts do store original
+        # message into this file too.
+        merge_msg_path = join(self.path, ".git", "MERGE_MSG")
+        merging = isfile(merge_msg_path)
 
-        self.git("commit", "--no-edit")
+        if merging:
+            # handle conflicts
+            self.git2("diff", "--name-only", "--diff-filter=U")
+            # get conflicts skipping empty lines
+            conflicts = [ n for n in self._stdout.strip().split(b"\n") if n ]
+
+            # get changes for unresolved conflicts from original history
+            for c in conflicts:
+                self.git("checkout", commit.sha, c.decode("utf-8"))
+
+            self.git("commit", "--no-edit")
+        else:
+            # All changes had been added to index and committed before. Only
+            # ensure that committer name, e-mail and date are correct.
+            self.git("commit", "--no-edit", "--amend")
 
         self.git2("rev-parse", "HEAD")
         commit.cloned_sha = self._stdout.split(b"\n")[0]

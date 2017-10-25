@@ -195,6 +195,19 @@ class GitContext(ActionContext):
 
         self._origin2cloned = origin2cloned
 
+    def plan_set_commiter_by_env(self):
+        "Inserts SetCommitter action getting its parameters from environment."
+
+        committed_date, committer_tz_offset = gds2so(
+            environ["GIT_COMMITTER_DATE"]
+        )
+        SetCommitter(
+            committer_name = environ["GIT_COMMITTER_NAME"],
+            committer_email = environ["GIT_COMMITTER_EMAIL"],
+            committed_date = committed_date,
+            committer_tz_offset = committer_tz_offset
+        )
+
     def restore_cloned(self):
         sha2commit = self._sha2commit
 

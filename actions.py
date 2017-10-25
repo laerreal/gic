@@ -50,6 +50,8 @@ from subprocess import (
     Popen
 )
 from time import (
+    mktime,
+    strptime,
     gmtime,
     strftime
 )
@@ -217,6 +219,23 @@ def dt(ts, off):
     else:
         ret = ret + ("-%02d%02d" % (off / 3600, (off / 60) % 60))
     return ret
+
+def gds2so(gds):
+    "Git Date String To Seconds since epoch and time zone Offset"
+    offset_str = gds[-5:]
+    hours = int(offset_str[1:3])
+    minutes = int(offset_str[3:])
+    # sign is reverted
+    sign = -1 if offset_str[0] == "+"  else 1
+    offset = sign * (hours * 3600 + minutes * 60)
+
+    datetime_str = gds[:-5]
+    dt_val = strptime(datetime_str, "%Y-%m-%d %H:%M:%S")
+    ts = mktime(dt_val)
+
+    # assert gds == dt(ts, offset)
+
+    return (ts, offset)
 
 class Action(sloted):
     __slots__ = ["_ctx"]

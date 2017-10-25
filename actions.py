@@ -442,15 +442,14 @@ class ContinueCommitting(GitAction):
 
     def __call__(self):
         self.git2("diff", "--name-only", "--diff-filter=U")
-        conflicts = self._stdout.strip().split(b"\n")
+        # get conflicts skipping empty lines
+        conflicts = [ n for n in self._stdout.strip().split(b"\n") if n ]
 
         sha2commit = self._ctx._sha2commit
         commit = sha2commit[self.commit_sha]
 
         # get accepted changes for unresolved conflicts from original history
         for c in conflicts:
-            if not c: # there are empty lines sometimes
-                continue
             self.git("checkout", commit.sha, c.decode("utf-8"))
 
         self.git("commit", "--no-edit")

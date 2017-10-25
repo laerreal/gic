@@ -16,7 +16,7 @@ __all__ = [
           , "CheckoutCloned"
           , "CheckoutOrphan"
           , "MergeCloned"
-          , "ContinueMerging"
+          , "ContinueCommitting"
           , "SubtreeMerge"
           , "CherryPick"
           , "CreateHead"
@@ -428,7 +428,7 @@ class MergeCloned(GitAction):
                 # there is something else...
                 raise e
 
-            ContinueMerging(
+            ContinueCommitting(
                 path = self.path,
                 commit_sha = self.commit_sha,
                 message = message
@@ -438,7 +438,7 @@ class MergeCloned(GitAction):
         self.git2("rev-parse", "HEAD")
         commit.cloned_sha = self._stdout.split(b"\n")[0]
 
-class ContinueMerging(GitAction):
+class ContinueCommitting(GitAction):
     __slots__ = ["commit_sha", "message"]
 
     def __call__(self):

@@ -462,11 +462,11 @@ class ContinueCommitting(GitAction):
             for c in conflicts:
                 self.git("checkout", commit.sha, c.decode("utf-8"))
 
-            self.git("commit", "--no-edit")
+            self.git("commit", "--allow-empty", "--no-edit")
         else:
             # All changes had been added to index and committed before. Only
             # ensure that committer name, e-mail and date are correct.
-            self.git("commit", "--no-edit", "--amend")
+            self.git("commit", "--allow-empty", "--no-edit", "--amend")
 
         self.git2("rev-parse", "HEAD")
         commit.cloned_sha = self._stdout.split(b"\n")[0]

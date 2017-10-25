@@ -1,5 +1,6 @@
 __all__ = [
     "Action"
+      , "Interrupt"
       , "FSAction"
           , "RemoveDirectory"
           , "ProvideDirectory"
@@ -259,6 +260,13 @@ class Action(sloted):
 
     def __gen_code__(self, g):
         self.gen_by_slots(g, queue = False)
+
+class Interrupt(Action):
+    __slots__ = ["reason"]
+
+    def __call__(self):
+        print(self.reason)
+        self._ctx.interrupt()
 
 class FSAction(Action):
     __slots__ = ["path"]

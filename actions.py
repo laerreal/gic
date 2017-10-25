@@ -430,8 +430,7 @@ class MergeCloned(GitAction):
 
             ContinueCommitting(
                 path = self.path,
-                commit_sha = self.commit_sha,
-                message = message
+                commit_sha = self.commit_sha
             )
             return
 
@@ -439,7 +438,7 @@ class MergeCloned(GitAction):
         commit.cloned_sha = self._stdout.split(b"\n")[0]
 
 class ContinueCommitting(GitAction):
-    __slots__ = ["commit_sha", "message"]
+    __slots__ = ["commit_sha"]
 
     def __call__(self):
         self.git2("diff", "--name-only", "--diff-filter=U")
@@ -454,7 +453,7 @@ class ContinueCommitting(GitAction):
                 continue
             self.git("checkout", commit.sha, c.decode("utf-8"))
 
-        self.git("commit", "-m", self.message)
+        self.git("commit", "--no-edit")
 
         self.git2("rev-parse", "HEAD")
         commit.cloned_sha = self._stdout.split(b"\n")[0]

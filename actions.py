@@ -450,6 +450,8 @@ class ContinueMerging(GitAction):
 
         # get accepted changes for unresolved conflicts from original history
         for c in conflicts:
+            if not c: # there are empty lines sometimes
+                continue
             self.git("checkout", commit.sha, c.decode("utf-8"))
 
         self.git("commit", "-m", self.message)

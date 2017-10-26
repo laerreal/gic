@@ -450,6 +450,7 @@ class MergeCloned(GitAction):
     __slots__ = ["commit_sha", "message", "extra_parents"]
 
     def __call__(self):
+        ctx = self._ctx
         sha2commit = self._ctx._sha2commit
         commit = sha2commit[self.commit_sha]
         message = self.message
@@ -473,10 +474,24 @@ class MergeCloned(GitAction):
                 # there is something else...
                 raise e
 
+            # let user to resolve conflict by self
+            confl_str = (
+                ("is merge conflict with '%s'" % conflicts[0])
+                    if len (conflicts) == 1
+                else "are merge conflicts"
+            )
+            Interrupt(
+                reason = "There %s. Interrupting... %s" % (
+                    confl_str, MSG_MNG_CNFLCT_BY_SFL
+                )
+            )
+            # preserve original committer information
+            ctx.plan_set_commiter_by_env()
             ContinueCommitting(
                 path = self.path,
                 commit_sha = self.commit_sha
             )
+            ResetCommitter()
             return
 
         self.git2("rev-parse", "HEAD")

@@ -376,6 +376,17 @@ will be cloned. Other commits will be taken as is. A commit belongs to main
 stream if it is a descendant of the given commit or both have at least one
 common ancestor. Commonly, SHA1 corresponds to main stream initial commit."""
     )
+    ap.add_argument("-b", "--break",
+        type = arg_type_SHA1_lower,
+        nargs = 1,
+        dest = "breaks",
+        metavar = "SHA1",
+        help = """\
+Specify break points. A break point is set on the commit identified by SHA1. \
+The process will be interrupted after the commit allowing a user to change it. \
+The tool will recover original committer name, e-mail and date during the next \
+launch."""
+    )
 
     args = ap.parse_args()
 
@@ -438,6 +449,7 @@ common ancestor. Commonly, SHA1 corresponds to main stream initial commit."""
 
         # Planing
         plan(repo, sha2commit, dstRepoPath,
+            breaks = args.breaks,
             main_stream_bits = ms_bits
         )
     else:

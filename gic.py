@@ -187,7 +187,12 @@ STATE_FILE_NAME = ".gic-state.py"
 def orphan(n):
     return "__orphan__%d" % n
 
-def plan(repo, sha2commit, dstRepoPath, main_stream_bits = 0):
+def plan(repo, sha2commit, dstRepoPath,
+    main_stream_bits = 0,
+    breaks = None
+):
+    breaks = set() if breaks is None else set(breaks)
+
     srcRepoPath = repo.working_dir
 
     queue = sorted(sha2commit.values(), key = lambda c : c.num)
@@ -287,6 +292,22 @@ def plan(repo, sha2commit, dstRepoPath, main_stream_bits = 0):
                 message = m.message
             )
             ResetCommitter()
+
+            if c.sha in breaks:
+                Interrupt(reason = "Interrupting as requested...")
+
+                # Update committer name, e-mail and date after user actions.
+                SetCommitter(
+                    committer_name = m.committer.name.encode("utf-8"),
+                    committer_email = m.committer.email,
+                    committed_date = m.committed_date,
+                    committer_tz_offset = m.committer_tz_offset
+                )
+                ContinueCommitting(
+                    path = dstRepoPath,
+                    commit_sha = c.sha
+                )
+                ResetCommitter()
 
         for h in c.heads:
             if h.path.startswith("refs/heads/"):

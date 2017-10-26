@@ -570,15 +570,40 @@ class CherryPick(GitAction):
     __slots__ = ["commit_sha", "message"]
 
     def __call__(self):
-        c = self._ctx._sha2commit[self.commit_sha]
+        ctx = self._ctx
+        c = ctx._sha2commit[self.commit_sha]
 
         try:
             self.git2("cherry-pick", c.sha)
         except RuntimeError as e:
-            if b"--allow-empty" not in self._stderr:
-                raise e
+            if b"--allow-empty" in self._stderr:
+                self.git("commit", "--allow-empty", "-m", self.message)
+            else:
+                # conflicts?
+                self.git2("diff", "--name-only", "--diff-filter=U")
+                conflicts = self._stdout.strip().split(b"\n")
 
-            self.git("commit", "--allow-empty", "-m", self.message)
+                if not conflicts:
+                    # there is something else...
+                    raise e
+
+                # let user to resolve conflict by self
+                confl_str = (
+                    ("is conflict with '%s'" % conflicts[0])
+                        if len (conflicts) == 1
+                    else "are conflicts"
+                )
+                Interrupt(reason = "There %s in course of cherry picking. "
+                    "Interrupting... %s" % (confl_str, MSG_MNG_CNFLCT_BY_SFL)
+                )
+                # preserve original committer information
+                ctx.plan_set_commiter_by_env()
+                ContinueCommitting(
+                    path = self.path,
+                    commit_sha = self.commit_sha
+                )
+                ResetCommitter()
+                return
 
         self.git2("rev-parse", "HEAD")
         c.cloned_sha = self._stdout.split(b"\n")[0]

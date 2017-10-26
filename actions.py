@@ -441,6 +441,11 @@ class CheckoutOrphan(GitAction):
             elif isdir(file_path):
                 rmtree(file_path)
 
+MSG_MNG_CNFLCT_BY_SFL = """\
+Try to manage it by self. Non-resolved conflicts will be taken from the \
+original repository automatically after continuing. \
+"""
+
 class MergeCloned(GitAction):
     __slots__ = ["commit_sha", "message", "extra_parents"]
 

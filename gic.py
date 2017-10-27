@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 
-from git_tools import CommitDesc
 from git import Repo
 from argparse import (
     ArgumentTypeError,
@@ -13,6 +12,7 @@ from os.path import (
     isfile
 )
 from common import (
+    CommitDesc,
     pythonize,
     callco
 )

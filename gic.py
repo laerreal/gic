@@ -313,21 +313,21 @@ def plan(repo, sha2commit, dstRepoPath,
             )
             ResetCommitter()
 
-            if c.sha in breaks:
-                Interrupt(reason = "Interrupting as requested...")
+        if c.sha in breaks:
+            Interrupt(reason = "Interrupting as requested...")
 
-                # Update committer name, e-mail and date after user actions.
-                SetCommitter(
-                    committer_name = m.committer.name.encode("utf-8"),
-                    committer_email = m.committer.email,
-                    committed_date = m.committed_date,
-                    committer_tz_offset = m.committer_tz_offset
-                )
-                ContinueCommitting(
-                    path = dstRepoPath,
-                    commit_sha = c.sha
-                )
-                ResetCommitter()
+            # Update committer name, e-mail and date after user actions.
+            SetCommitter(
+                committer_name = m.committer.name.encode("utf-8"),
+                committer_email = m.committer.email,
+                committed_date = m.committed_date,
+                committer_tz_offset = m.committer_tz_offset
+            )
+            ContinueCommitting(
+                path = dstRepoPath,
+                commit_sha = c.sha
+            )
+            ResetCommitter()
 
         for h in c.heads:
             if h.path.startswith("refs/heads/"):

@@ -417,6 +417,17 @@ The process will be interrupted after the commit allowing a user to change it. \
 The tool will recover original committer name, e-mail and date during the next \
 launch."""
     )
+    ap.add_argument("-s", "--skip",
+        type = arg_type_SHA1_lower,
+        nargs = 1,
+        dest = "skips",
+        metavar = "SHA1",
+        help = """\
+Specify a commit to skip. Use multiple options to skip several commits. If a \
+commit at break point is skipped then interruption will be made after \
+previous non-skipped commit in the branch except for no commits are copied yet \
+since either trunk or root."""
+    )
 
     args = ap.parse_args()
 
@@ -480,6 +491,7 @@ launch."""
         # Planing
         plan(repo, sha2commit, dstRepoPath,
             breaks = args.breaks,
+            skips = args.skips,
             main_stream_bits = ms_bits
         )
     else:

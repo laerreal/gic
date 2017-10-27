@@ -120,6 +120,26 @@ def arg_type_output_file(string):
 
     return string
 
+SHA1_digits = "0123456789abcdef"
+
+def arg_type_SHA1_lower(string):
+    if len(string) != 40:
+        raise ArgumentTypeError(
+            "'%s' is not SHA1, length must be 40 digits" % string
+        )
+
+    # lower characters
+    string = string.lower()
+
+    for d in string:
+        if d not in SHA1_digits:
+            raise ArgumentTypeError(
+                "'%s' is not SHA1, it may contains only digits 0-9 and "
+                "characters a-f" % string
+            )
+
+    return string
+
 def is_subtree(c, acceptable = 4):
     """ Heuristically detect a subtree merge.
 
@@ -337,26 +357,6 @@ def plan(repo, sha2commit, dstRepoPath,
     for c in sha2commit.values():
         if not c.processed:
             print("Commit %s was not cloned!" % str(c.sha))
-
-SHA1_digits = "0123456789abcdef"
-
-def arg_type_SHA1_lower(string):
-    if len(string) != 40:
-        raise ArgumentTypeError(
-            "'%s' is not SHA1, length must be 40 digits" % string
-        )
-
-    # lower characters
-    string = string.lower()
-
-    for d in string:
-        if d not in SHA1_digits:
-            raise ArgumentTypeError(
-                "'%s' is not SHA1, it may contains only digits 0-9 and "
-                "characters a-f" % string
-            )
-
-    return string
 
 def main():
     print("Git Interactive Cloner")

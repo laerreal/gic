@@ -209,9 +209,11 @@ def orphan(n):
 
 def plan(repo, sha2commit, dstRepoPath,
     main_stream_bits = 0,
-    breaks = None
+    breaks = None,
+    skips = None
 ):
     breaks = set() if breaks is None else set(breaks)
+    skips = set() if skips is None else set(skips)
 
     srcRepoPath = repo.working_dir
 
@@ -250,6 +252,7 @@ def plan(repo, sha2commit, dstRepoPath,
                     path = dstRepoPath
                 )
                 orphan_counter += 1
+                at_least_one_in_trunk = False
             else:
                 # get real parents order
                 main_stream_sha = m.parents[0].hexsha
@@ -259,87 +262,114 @@ def plan(repo, sha2commit, dstRepoPath,
                         path = dstRepoPath,
                         commit_sha = main_stream_sha
                     )
+                    at_least_one_in_trunk = False
 
-        if len(c.parents) > 1:
-            subtree_prefix = None if len(c.parents) != 2 else is_subtree(m)
+        skipping = c.sha in skips
 
-            SetAuthor(
-                author_name = m.author.name.encode("utf-8"),
-                author_email = m.author.email,
-                authored_date = m.authored_date,
-                author_tz_offset = m.author_tz_offset
-            )
-            SetCommitter(
-                committer_name = m.committer.name.encode("utf-8"),
-                committer_email = m.committer.email,
-                committed_date = m.committed_date,
-                committer_tz_offset = m.committer_tz_offset
-            )
-
-            if subtree_prefix is None:
-                MergeCloned(
-                    path = dstRepoPath,
-                    commit_sha = c.sha,
-                    message = m.message,
-                    # original parents order is significant
-                    extra_parents = [
-                        p.hexsha for p in m.parents[1:]
-                    ]
-                )
-            else:
-                SubtreeMerge(
-                    path = dstRepoPath,
-                    commit_sha = c.sha,
-                    message = m.message,
-                    parent_sha = m.parents[1].hexsha,
-                    prefix = subtree_prefix
-                )
-
-            ResetAuthor()
-            ResetCommitter()
-
+        if skipping:
+            for h in c.heads:
+                if h.path.startswith("refs/heads/"):
+                    if at_least_one_in_trunk:
+                        # Skipping a commits moves its head on first
+                        # non-skipped ancestor.
+                        CreateHead(
+                            path = dstRepoPath,
+                            name = h.name
+                        )
+                    else:
+                        print("Head '%s' will be skipped because no commits "
+                            "of this trunk are copied." % h.name
+                        )
+                elif h.path.startswith("refs/tags/"):
+                    print("Tag '%s' will be skipped with its commit!" % h.name)
         else:
-            # Note that author is set by cherry-pick
-            SetCommitter(
-                committer_name = m.committer.name.encode("utf-8"),
-                committer_email = m.committer.email,
-                committed_date = m.committed_date,
-                committer_tz_offset = m.committer_tz_offset
-            )
-            CherryPick(
-                path = dstRepoPath,
-                commit_sha = c.sha,
-                message = m.message
-            )
-            ResetCommitter()
+            at_least_one_in_trunk = True
 
-        for h in c.heads:
-            if h.path.startswith("refs/heads/"):
-                CreateHead(
-                    path = dstRepoPath,
-                    name = h.name
+            if len(c.parents) > 1:
+                subtree_prefix = None if len(c.parents) != 2 else is_subtree(m)
+
+                SetAuthor(
+                    author_name = m.author.name.encode("utf-8"),
+                    author_email = m.author.email,
+                    authored_date = m.authored_date,
+                    author_tz_offset = m.author_tz_offset
                 )
-            elif h.path.startswith("refs/tags/"):
-                CreateTag(
-                    path = dstRepoPath,
-                    name = h.name
+                SetCommitter(
+                    committer_name = m.committer.name.encode("utf-8"),
+                    committer_email = m.committer.email,
+                    committed_date = m.committed_date,
+                    committer_tz_offset = m.committer_tz_offset
                 )
+
+                if subtree_prefix is None:
+                    MergeCloned(
+                        path = dstRepoPath,
+                        commit_sha = c.sha,
+                        message = m.message,
+                        # original parents order is significant
+                        extra_parents = [
+                            p.hexsha for p in m.parents[1:]
+                        ]
+                    )
+                else:
+                    SubtreeMerge(
+                        path = dstRepoPath,
+                        commit_sha = c.sha,
+                        message = m.message,
+                        parent_sha = m.parents[1].hexsha,
+                        prefix = subtree_prefix
+                    )
+
+                ResetAuthor()
+                ResetCommitter()
+
+            else:
+                # Note that author is set by cherry-pick
+                SetCommitter(
+                    committer_name = m.committer.name.encode("utf-8"),
+                    committer_email = m.committer.email,
+                    committed_date = m.committed_date,
+                    committer_tz_offset = m.committer_tz_offset
+                )
+                CherryPick(
+                    path = dstRepoPath,
+                    commit_sha = c.sha,
+                    message = m.message
+                )
+                ResetCommitter()
+
+            for h in c.heads:
+                if h.path.startswith("refs/heads/"):
+                    CreateHead(
+                        path = dstRepoPath,
+                        name = h.name
+                    )
+                elif h.path.startswith("refs/tags/"):
+                    CreateTag(
+                        path = dstRepoPath,
+                        name = h.name
+                    )
 
         if c.sha in breaks:
-            Interrupt(reason = "Interrupting as requested...")
+            if at_least_one_in_trunk:
+                Interrupt(reason = "Interrupting as requested...")
 
-            # Update committer name, e-mail and date after user actions.
-            SetCommitter(
-                committer_name = m.committer.name.encode("utf-8"),
-                committer_email = m.committer.email,
-                committed_date = m.committed_date,
-                committer_tz_offset = m.committer_tz_offset
-            )
-            ContinueCommitting(
-                path = dstRepoPath,
-                commit_sha = c.sha
-            )
-            ResetCommitter()
+                # Update committer name, e-mail and date after user actions.
+                SetCommitter(
+                    committer_name = m.committer.name.encode("utf-8"),
+                    committer_email = m.committer.email,
+                    committed_date = m.committed_date,
+                    committer_tz_offset = m.committer_tz_offset
+                )
+                ContinueCommitting(
+                    path = dstRepoPath,
+                    commit_sha = c.sha
+                )
+                ResetCommitter()
+            else:
+                print("Cannot interrupt on '%s' because no commits "
+                    "of this trunk are copied." % c.sha
+                )
 
         prev_c = c
 

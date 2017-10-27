@@ -313,6 +313,18 @@ def plan(repo, sha2commit, dstRepoPath,
             )
             ResetCommitter()
 
+        for h in c.heads:
+            if h.path.startswith("refs/heads/"):
+                CreateHead(
+                    path = dstRepoPath,
+                    name = h.name
+                )
+            elif h.path.startswith("refs/tags/"):
+                CreateTag(
+                    path = dstRepoPath,
+                    name = h.name
+                )
+
         if c.sha in breaks:
             Interrupt(reason = "Interrupting as requested...")
 
@@ -328,18 +340,6 @@ def plan(repo, sha2commit, dstRepoPath,
                 commit_sha = c.sha
             )
             ResetCommitter()
-
-        for h in c.heads:
-            if h.path.startswith("refs/heads/"):
-                CreateHead(
-                    path = dstRepoPath,
-                    name = h.name
-                )
-            elif h.path.startswith("refs/tags/"):
-                CreateTag(
-                    path = dstRepoPath,
-                    name = h.name
-                )
 
         prev_c = c
 

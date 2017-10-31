@@ -40,6 +40,10 @@ from os import (
     chdir
 )
 from itertools import count
+from subprocess import (
+    PIPE,
+    Popen
+)
 
 class GICCommitDesc(CommitDesc):
     __slots__ = [
@@ -56,6 +60,23 @@ class GICCommitDesc(CommitDesc):
 def arg_type_directory(string):
     if not isdir(string):
         raise ArgumentTypeError("'%s' is not a directory" % string)
+    return string
+
+def arg_type_git_remote(string):
+    # See: https://stackoverflow.com/questions/9610131/how-to-check-the-validity-of-a-remote-git-repository-url
+    test_command = Popen(["git", "ls-remote", string],
+        stdout = PIPE,
+        stderr = PIPE,
+    )
+    _stdout, _stderr = test_command.communicate()
+
+    if test_command.returncode:
+        raise ArgumentTypeError("Cannot handle '%s' as a Git repository, "
+            "underlying error:\n%s" % (
+                string,
+                "stdout:\n%s\nstderr:\n%s" % (_stdout, _stderr)
+            )
+        )
     return string
 
 def arg_type_new_directory(string):

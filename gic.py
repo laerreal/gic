@@ -435,7 +435,7 @@ def main():
     init_cwd = getcwd()
 
     ap = ArgumentParser()
-    ap.add_argument("source", type = arg_type_directory, nargs = "?")
+    ap.add_argument("source", type = arg_type_git_repository, nargs = "?")
     ap.add_argument("-d", "--destination", type = arg_type_new_directory)
     ap.add_argument("-r", "--result-state", type = arg_type_output_file)
     ap.add_argument("-m", "--main-stream",

@@ -7,6 +7,7 @@ from argparse import (
 )
 from actions import *
 from os.path import (
+    join,
     split,
     isdir,
     isfile
@@ -39,6 +40,7 @@ from os import (
     getcwd,
     chdir
 )
+from shutil import rmtree
 from itertools import count
 from subprocess import (
     PIPE,
@@ -467,13 +469,50 @@ since either trunk or root."""
             else: # no saved context found among loaded objects
                 ctx = None
 
-    if ctx is None:
-        srcRepoPath = args.source
+    cloned_source = None
 
-        if srcRepoPath is None:
+    if ctx is None:
+        source = args.source
+
+        if source is None:
             print("No source repository path was given.")
             ap.print_help(stdout)
             return
+
+        try:
+            remote = arg_type_git_remote(source)
+        except ArgumentTypeError:
+            # Source points to a local repository.
+            srcRepoPath = source
+        else:
+            # Source points to a remote repository. It must be cloned first
+            # because git.Repo cannot work with a remote repository.
+            cloned_source = join(init_cwd, ".gic-cloned-source")
+            try:
+                cloned_source = arg_type_new_directory(cloned_source)
+            except ArgumentTypeError:
+                raise RuntimeError("Cannot clone source repository into local "
+                    "temporal directory '%s', underlying error:\n%s" % (
+                        cloned_source, format_exc()
+                    )
+                )
+
+            print("Cloning source repository into local temporal directory "
+                "'%s'" % cloned_source
+            )
+
+            # delete existing copy
+            if isdir(cloned_source):
+                rmtree(cloned_source)
+
+            cloning = Popen(["git", "clone", remote, cloned_source])
+            cloning.wait()
+
+            if cloning.returncode:
+                raise RuntimeError("Cloning has failed.")
+                rmtree(cloned_source)
+
+            srcRepoPath = cloned_source
 
         ctx = GitContext(src_repo_path = srcRepoPath)
         switch_context(ctx)
@@ -515,6 +554,10 @@ since either trunk or root."""
             skips = args.skips,
             main_stream_bits = ms_bits
         )
+
+        # remove temporal clone of the source repository
+        if cloned_source:
+            RemoveDirectory(path = cloned_source)
     else:
         print("The context was loaded. Continuing...")
 

@@ -383,7 +383,6 @@ class GitAction(Action):
         command.extend(cmd_args)
 
         p = Popen(command, stdout = PIPE, stderr = PIPE)
-        p.wait()
 
         self._stdout, self._stderr = p.communicate()
 

@@ -468,7 +468,7 @@ common ancestor. Commonly, SHA1 corresponds to main stream initial commit."""
     )
     ap.add_argument("-b", "--break",
         type = arg_type_SHA1_lower,
-        nargs = 1,
+        action = 'append',
         dest = "breaks",
         metavar = "SHA1",
         help = """\
@@ -479,7 +479,7 @@ launch."""
     )
     ap.add_argument("-s", "--skip",
         type = arg_type_SHA1_lower,
-        nargs = 1,
+        action = 'append',
         dest = "skips",
         metavar = "SHA1",
         help = """\
@@ -490,7 +490,7 @@ since either trunk or root."""
     )
     ap.add_argument("-H", "--head",
         type = arg_type_git_head_name,
-        nargs = 1,
+        action = 'append',
         dest = "heads",
         metavar = "name_of_head",
         help = """\

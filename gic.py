@@ -181,6 +181,25 @@ def arg_type_SHA1_lower(string):
 
     return string
 
+def arg_type_git_head_name(string):
+    full_name = "refs/heads/" + string
+
+    check_ref_format = Popen(
+        ["git", "check-ref-format", full_name],
+        stdout = PIPE,
+        stderr = PIPE
+    )
+
+    _stdout, _stderr = check_ref_format.communicate()
+    if check_ref_format.returncode:
+        raise ArgumentTypeError("Incorrect head name '%s' (%s), Git stdout:\n"
+            "%s\nstderr:\n%s\n" % (
+                string, full_name, _stdout, _stderr
+            )
+        )
+
+    return full_name
+
 def is_subtree(c, acceptable = 4):
     """ Heuristically detect a subtree merge.
 

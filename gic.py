@@ -488,6 +488,15 @@ commit at break point is skipped then interruption will be made after \
 previous non-skipped commit in the branch except for no commits are copied yet \
 since either trunk or root."""
     )
+    ap.add_argument("-H", "--head",
+        type = arg_type_git_head_name,
+        nargs = 1,
+        dest = "heads",
+        metavar = "name_of_head",
+        help = """\
+Copy commits those are ancestors of selected heads only (including the
+heads)."""
+    )
 
     args = ap.parse_args()
 
@@ -596,7 +605,8 @@ since either trunk or root."""
     callco(
         GICCommitDesc.co_build_git_graph(repo, sha2commit,
             skip_remotes = True,
-            skip_stashes = True
+            skip_stashes = True,
+            refs = args.heads
         )
     )
 

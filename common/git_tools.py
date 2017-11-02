@@ -21,7 +21,8 @@ class CommitDesc(object):
     @classmethod
     def co_build_git_graph(klass, repo, commit_desc_nodes,
         skip_remotes = False,
-        skip_stashes = False
+        skip_stashes = False,
+        refs = None
     ):
         # iterations to yield
         i2y = GGB_IBY
@@ -43,6 +44,8 @@ class CommitDesc(object):
             if skip_remotes and head.path.startswith("refs/remotes/"):
                 continue
             if skip_stashes and head.path.startswith("refs/stash"):
+                continue
+            if refs and head.path not in refs:
                 continue
 
             try:

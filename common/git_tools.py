@@ -24,6 +24,28 @@ class CommitDesc(object):
         skip_stashes = False,
         refs = None
     ):
+        """
+Builds a graph of repo. Any commit is given a descriptor of type either
+CommitDesc or its subclass. Call co_build_git_graph of the class you want
+the descriptor type will be.
+
+commit_desc_nodes:
+    A container for result. It must support operator []. A key is the SHA1 of
+    a commit, a value is a descriptor of the commit. E.g. dict.
+
+skip_remotes:
+    Skip commits which are ancestors of remote heads only.
+
+skip_stashes:
+    Skip commits which are ancestors of stashed commits only.
+
+refs:
+    Given references, add to graph ancestors of them only. Value must support
+    'in' operator. A 'list' is enough for small amount of heads. Consider a
+    'set' for big head lists.
+
+    References must be given by full path (E.g. refs/heads/may_branch)
+        """
         # iterations to yield
         i2y = GGB_IBY
 

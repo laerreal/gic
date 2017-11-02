@@ -512,6 +512,39 @@ since either trunk or root."""
                 raise RuntimeError("Cloning has failed.")
                 rmtree(cloned_source)
 
+            # create all branches in temporal copy
+            tmp_repo = Repo(cloned_source)
+
+            chdir(cloned_source)
+
+            for ref in list(tmp_repo.references):
+                if not ref.path.startswith("refs/remotes/origin/"):
+                    continue
+
+                # cut out prefix "origin/"
+                branch = ref.name[7:]
+
+                if branch == "HEAD" or branch == "master":
+                    continue
+
+                add_branch = Popen(
+                    ["git", "branch", branch, ref.name],
+                    stdout = PIPE,
+                    stderr = PIPE
+                )
+                _stdout, _stderr = add_branch.communicate()
+
+                if add_branch.returncode:
+                    chdir(init_cwd)
+                    rmtree(cloned_source)
+
+                    raise RuntimeError("Cannot create tracking branch '%s' "
+                        "in temporal copy of origin repository, Git stdout:\n"
+                        "%s\nstderr:\n%s\n" % (branch, _stdout, _stderr)
+                    )
+
+            chdir(init_cwd)
+
             srcRepoPath = cloned_source
 
         ctx = GitContext(src_repo_path = srcRepoPath)

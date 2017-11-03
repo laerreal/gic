@@ -19,7 +19,7 @@ if not PY2:
 
 class GICCommitDesc(CommitDesc):
     __slots__ = [
-        "processed"
+        "processed",
         "cloned_sha"
     ]
 

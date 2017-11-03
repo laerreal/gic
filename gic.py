@@ -237,11 +237,19 @@ since either trunk or root."""
     ap.add_argument("-H", "--head",
         type = arg_type_git_head_name,
         action = 'append',
-        dest = "heads",
+        dest = "refs",
         metavar = "name_of_head",
         help = """\
 Copy commits those are ancestors of selected heads only (including the
 heads)."""
+    )
+    ap.add_argument("-t", "--tag",
+        type = arg_type_git_tag_name,
+        action = 'append',
+        dest = "refs",
+        metavar = "name_of_tag",
+        help = """\
+Copy commits those are ancestors of selected tags only (including the tag)."""
     )
 
     args = ap.parse_args()
@@ -345,7 +353,7 @@ heads)."""
         GICCommitDesc.co_build_git_graph(repo, sha2commit,
             skip_remotes = True,
             skip_stashes = True,
-            refs = args.heads
+            refs = args.refs
         )
     )
 

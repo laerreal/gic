@@ -600,11 +600,18 @@ class CherryPick(GitAction):
             if b"--allow-empty" in self._stderr:
                 self.git("commit", "--allow-empty", "-m", self.message)
             else:
+                # preserve cached output for debug message
+                _stdout, _stderr = self._stdout, self._stderr
+
                 # conflicts?
                 conflicts = self.get_conflicts()
 
                 if not conflicts:
                     # there is something else...
+                    sys.stdout.write(_stdout)
+                    sys.stdout.flush()
+                    sys.stderr.write(_stderr)
+                    sys.stderr.flush()
                     raise e
 
                 # let user to resolve conflict by self

@@ -448,6 +448,18 @@ def plan(repo, sha2commit, dstRepoPath,
         if not c.processed:
             print("Commit %s was not cloned!" % str(c.sha))
 
+def load_context(file_name):
+    loaded = {}
+
+    execfile(file_name, globals(), loaded)
+
+    for ctx in loaded.values():
+        if isinstance(ctx, GitContext):
+            return ctx
+
+    # no saved context found among loaded objects
+    raise RuntimeError("No context found in file '%s'" % file_name)
+
 def main():
     print("Git Interactive Cloner")
 
@@ -502,18 +514,11 @@ heads)."""
 
     ctx = None
     if isfile(STATE_FILE_NAME):
-        loaded = {}
         try:
-            execfile(STATE_FILE_NAME, globals(), loaded)
+            ctx = load_context(STATE_FILE_NAME)
         except:
             print("Incorrect state file")
             print_exc(file = stdout)
-        else:
-            for ctx in loaded.values():
-                if isinstance(ctx, GitContext):
-                    break
-            else: # no saved context found among loaded objects
-                ctx = None
 
     cloned_source = None
 

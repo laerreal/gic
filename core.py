@@ -19,6 +19,7 @@ if not PY2:
 
 class GICCommitDesc(CommitDesc):
     __slots__ = [
+        "skipped",
         "processed",
         "cloned_sha"
     ]
@@ -28,6 +29,7 @@ class GICCommitDesc(CommitDesc):
 
         self.cloned_sha = None
         self.processed = False
+        self.skipped = False
 
 def is_subtree(c, acceptable = 4):
     """ Heuristically detect a subtree merge.

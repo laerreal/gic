@@ -23,6 +23,7 @@ __all__ = [
           , "CreateHead"
           , "DeleteHead"
           , "CreateTag"
+          , "DeleteTag"
           , "CollectGarbage"
   , "ActionContext"
       , "GitContext"
@@ -653,6 +654,12 @@ class CreateTag(GitAction):
 
     def __call__(self):
         self.git("tag", "-f", self.name)
+
+class DeleteTag(GitAction):
+    __slots__ = ["name"]
+
+    def __call__(self):
+        self.git("tag", "-d", self.name)
 
 class CollectGarbage(GitAction):
     def __call__(self):

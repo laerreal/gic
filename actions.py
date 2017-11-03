@@ -476,8 +476,7 @@ class MergeCloned(GitAction):
             )
         except RuntimeError as e:
             # conflicts?
-            self.git2("diff", "--name-only", "--diff-filter=U")
-            conflicts = self._stdout.strip().split(b"\n")
+            conflicts = self.get_conflicts()
 
             if not conflicts:
                 # there is something else...
@@ -523,9 +522,7 @@ class ContinueCommitting(GitAction):
 
         if merging:
             # handle conflicts
-            self.git2("diff", "--name-only", "--diff-filter=U")
-            # get conflicts skipping empty lines
-            conflicts = [ n for n in self._stdout.strip().split(b"\n") if n ]
+            conflicts = self.get_conflicts()
 
             # get changes for unresolved conflicts from original history
             for c in conflicts:
@@ -604,8 +601,7 @@ class CherryPick(GitAction):
                 self.git("commit", "--allow-empty", "-m", self.message)
             else:
                 # conflicts?
-                self.git2("diff", "--name-only", "--diff-filter=U")
-                conflicts = self._stdout.strip().split(b"\n")
+                conflicts = self.get_conflicts()
 
                 if not conflicts:
                     # there is something else...

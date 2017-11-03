@@ -93,6 +93,19 @@ def is_subtree(c, acceptable = 4):
 def orphan(n):
     return "__orphan__%d" % n
 
+def plan_heads(c, dst_repo_path):
+    for h in c.heads:
+        if h.path.startswith("refs/heads/"):
+            CreateHead(
+                path = dst_repo_path,
+                name = h.name
+            )
+        elif h.path.startswith("refs/tags/"):
+            CreateTag(
+                path = dst_repo_path,
+                name = h.name
+            )
+
 CLONED_REPO_NAME = "__cloned__"
 
 def plan(repo, sha2commit, dstRepoPath,
@@ -230,17 +243,7 @@ def plan(repo, sha2commit, dstRepoPath,
                 )
                 ResetCommitter()
 
-            for h in c.heads:
-                if h.path.startswith("refs/heads/"):
-                    CreateHead(
-                        path = dstRepoPath,
-                        name = h.name
-                    )
-                elif h.path.startswith("refs/tags/"):
-                    CreateTag(
-                        path = dstRepoPath,
-                        name = h.name
-                    )
+            plan_heads(c, dstRepoPath)
 
         if c.sha in breaks:
             if at_least_one_in_trunk:

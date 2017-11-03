@@ -189,6 +189,9 @@ def arg_type_git_ref_name_internal(ref, string):
 def arg_type_git_head_name(string):
     return arg_type_git_ref_name_internal("head", string)
 
+def arg_type_git_tag_name(string):
+    return arg_type_git_ref_name_internal("tag", string)
+
 STATE_FILE_NAME = ".gic-state.py"
 
 def main():

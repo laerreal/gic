@@ -175,6 +175,7 @@ def plan(repo, sha2commit, dstRepoPath,
         skipping = c.sha in skips
 
         if skipping:
+            c.skipped = True
             for h in c.heads:
                 if h.path.startswith("refs/heads/"):
                     if at_least_one_in_trunk:

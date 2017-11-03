@@ -640,6 +640,7 @@ class DeleteHead(GitAction):
 
 class CreateTag(GitAction):
     __slots__ = ["name"]
+    # TODO: tag message
 
     def __call__(self):
         self.git("tag", "-f", self.name)

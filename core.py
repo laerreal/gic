@@ -108,6 +108,27 @@ def plan_heads(c, dst_repo_path):
                 name = h.name
             )
 
+def get_actual_parents(orig_parent, sha2commit):
+    """ A parent of a merge commit could be skipped. But a replacement have to
+be provided. This function looks it up. As a merge commit could be skipped too,
+one parent could be replaced with several parents.
+    """
+
+    if not sha2commit[orig_parent.hexsha].skipped:
+        return [orig_parent]
+
+    ret = []
+    stack = list(orig_parent.parents)
+    while stack:
+        p = stack.pop()
+
+        if sha2commit[p.hexsha].skipped:
+            stack.extend(p.parents)
+        else:
+            ret.append(p)
+
+    return ret
+
 CLONED_REPO_NAME = "__cloned__"
 
 def plan(repo, sha2commit, dstRepoPath,
@@ -174,6 +195,33 @@ def plan(repo, sha2commit, dstRepoPath,
 
         skipping = c.sha in skips
 
+        if not skipping and len(c.parents) > 1:
+            # Handle merge commit parent skipping.
+            extra_parents = []
+            for p in m.parents[1:]:
+                aps = get_actual_parents(p, sha2commit)
+
+                if aps:
+                    if aps[0] != p:
+                        print("Parent %s of %s is skipped and will be "
+                            "substituted with %s" % (
+                                p.hexsha, c.sha,
+                                ", ".join(pp.hexsha for pp in aps)
+                            )
+                        )
+                else:
+                    print("Parent %s of %s is skipped and cannot be "
+                        "replaced" % (p.hexsha, c.sha)
+                    )
+
+                extra_parents.extend(aps)
+
+            if not extra_parents:
+                print("Merge commit %s is skipping because its parents are "
+                    "skipped leaving it with only one parent" % c.sha
+                )
+                skipping = True
+
         if skipping:
             c.skipped = True
             for h in c.heads:
@@ -217,7 +265,7 @@ def plan(repo, sha2commit, dstRepoPath,
                         message = m.message,
                         # original parents order is significant
                         extra_parents = [
-                            p.hexsha for p in m.parents[1:]
+                            p.hexsha for p in extra_parents
                         ]
                     )
                 else:
@@ -225,7 +273,7 @@ def plan(repo, sha2commit, dstRepoPath,
                         path = dstRepoPath,
                         commit_sha = c.sha,
                         message = m.message,
-                        parent_sha = m.parents[1].hexsha,
+                        parent_sha = extra_parents[0].hexsha,
                         prefix = subtree_prefix
                     )
 

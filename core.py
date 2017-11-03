@@ -148,6 +148,7 @@ def plan(repo, sha2commit, dstRepoPath,
         if main_stream_bits and not (c.roots & main_stream_bits):
             # this commit will be used as is
             c.cloned_sha = c.sha
+            # TODO: heads and tags of such commits
             continue
 
         m = repo.commit(c.sha)

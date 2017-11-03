@@ -391,6 +391,12 @@ class GitAction(Action):
 
         return p
 
+    def get_conflicts(self):
+        self.git2("diff", "--name-only", "--diff-filter=U")
+        # get conflicts skipping empty lines
+        conflicts = [ n for n in self._stdout.strip().split(b"\n") if n ]
+        return conflicts
+
 class InitRepo(GitAction):
     def __call__(self):
         self.git("init")

@@ -324,6 +324,16 @@ def plan(repo, sha2commit, dstRepoPath,
     for o in range(0, orphan_counter):
         DeleteHead(path = dstRepoPath, name = orphan(o))
 
+    # delete tags of non-cloned commits
+    for tag in repo.references:
+        if not tag.path.startswith("refs/tags/"):
+            continue
+
+        # Note that, no commit descriptors could be created for a trunk.
+        c = sha2commit.get(tag.commit.hexsha, None)
+        if c is None or c.skipped:
+            DeleteTag(path = dstRepoPath, name = tag.name)
+
     CheckoutCloned(
         path = dstRepoPath,
         commit_sha = repo.head.commit.hexsha

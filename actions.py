@@ -56,7 +56,7 @@ from time import (
     strftime
 )
 from traceback import print_exc
-from sys import stdout
+import sys
 from common import sloted
 
 current_context = None
@@ -133,7 +133,7 @@ class ActionContext(sloted):
                 a()
             except:
                 print("Failed on %s" % a)
-                print_exc(file = stdout)
+                print_exc(file = sys.stdout)
                 return False
 
             if extra_actions:

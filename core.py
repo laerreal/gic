@@ -115,7 +115,11 @@ def plan(repo, sha2commit, dstRepoPath,
         name = CLONED_REPO_NAME,
         address = srcRepoPath
     )
-    FetchRemote(path = dstRepoPath, name = CLONED_REPO_NAME)
+    FetchRemote(
+        path = dstRepoPath,
+        name = CLONED_REPO_NAME,
+        tags = True
+    )
 
     iqueue = iter(queue)
 

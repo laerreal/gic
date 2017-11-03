@@ -409,8 +409,12 @@ class RemoveRemote(RemoteAction):
         self.git("remote", "remove", self.name)
 
 class FetchRemote(RemoteAction):
+    __slots__ = [
+        "tags"
+    ]
+
     def __call__(self):
-        self.git("fetch", "--tags", self.name)
+        self.git("fetch", "--%stags" % ("" if self.tags else "no-"), self.name)
 
 class CheckoutCloned(GitAction):
     __slots__ = ["commit_sha"]

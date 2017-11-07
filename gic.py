@@ -147,6 +147,22 @@ def arg_type_output_file(string):
 
     return string
 
+def arg_type_input_file(string):
+    if not isfile(string):
+        raise ArgumentTypeError("No file '%s' found" % string)
+
+    # check access rights
+    try:
+        open(string, "rb").close()
+    except:
+        raise ArgumentTypeError(
+            "Cannot open file '%s' for reading, underlying error:\n%s" % (
+                string, format_exc()
+            )
+        )
+
+    return string
+
 SHA1_digits = "0123456789abcdef"
 
 def arg_type_SHA1_lower(string):

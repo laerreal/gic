@@ -8,6 +8,8 @@ from common import CommitDesc
 
 from actions import *
 
+from os.path import abspath
+
 from six import PY2
 if not PY2:
     def execfile(filename, globals = None, locals = None):
@@ -134,10 +136,40 @@ CLONED_REPO_NAME = "__cloned__"
 def plan(repo, sha2commit, dstRepoPath,
     main_stream_bits = 0,
     breaks = None,
-    skips = None
+    skips = None,
+    insertions = None
 ):
+    """
+insertions:
+    List of commits to insert. Each insertion is described by a tuple of
+    an existing commit SHA1 and inserted commit content:
+
+    ("...SHA1...", content)
+
+    Supported content:
+    - name of the patch file in `git am` compatible format.
+
+    The commit is inserted _before_ the commit identified by SHA1.
+
+    Multiple insertions for one SHA1 are supported. The order is preserved.
+
+    A commit can be inserted before skipped one.
+
+    If a main stream is set then insertions before non-main stream commits are
+    ignored.
+
+    XXX: insertion before a merge commit is buggy, except for that merge is
+    skipped.
+    """
     breaks = set() if breaks is None else set(breaks)
     skips = set() if skips is None else set(skips)
+
+    # Group insertions by SHA1 for fastest search. Order of insertions for one
+    # SHA1 must be preserved.
+    insertion_table = {}
+    if insertions:
+        for sha1, insertion in insertions:
+            insertion_table.setdefault(sha1, []).append(insertion)
 
     srcRepoPath = repo.working_dir
 
@@ -193,6 +225,14 @@ def plan(repo, sha2commit, dstRepoPath,
                         commit_sha = main_stream_sha
                     )
                     at_least_one_in_trunk = False
+
+        insertions = insertion_table.get(c_sha, [])
+        for i in insertions:
+            abs_i = abspath(i)
+            ApplyPatchFile(
+                path = dstRepoPath,
+                patch_name = abs_i
+            )
 
         skipping = c_sha in skips
 

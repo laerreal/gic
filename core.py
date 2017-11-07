@@ -165,14 +165,15 @@ def plan(repo, sha2commit, dstRepoPath,
 
     for c in iqueue:
         c.processed = True
+        c_sha = c.sha # attribute getting optimization
 
         if main_stream_bits and not (c.roots & main_stream_bits):
             # this commit will be used as is
-            c.cloned_sha = c.sha
+            c.cloned_sha = c_sha
             # TODO: heads and tags of such commits
             continue
 
-        m = repo.commit(c.sha)
+        m = repo.commit(c_sha)
 
         if prev_c is not None:
             if not c.parents:
@@ -193,7 +194,7 @@ def plan(repo, sha2commit, dstRepoPath,
                     )
                     at_least_one_in_trunk = False
 
-        skipping = c.sha in skips
+        skipping = c_sha in skips
 
         if not skipping and len(c.parents) > 1:
             # Handle merge commit parent skipping.
@@ -205,20 +206,20 @@ def plan(repo, sha2commit, dstRepoPath,
                     if aps[0] != p:
                         print("Parent %s of %s is skipped and will be "
                             "substituted with %s" % (
-                                p.hexsha, c.sha,
+                                p.hexsha, c_sha,
                                 ", ".join(pp.hexsha for pp in aps)
                             )
                         )
                 else:
                     print("Parent %s of %s is skipped and cannot be "
-                        "replaced" % (p.hexsha, c.sha)
+                        "replaced" % (p.hexsha, c_sha)
                     )
 
                 extra_parents.extend(aps)
 
             if not extra_parents:
                 print("Merge commit %s is skipping because its parents are "
-                    "skipped leaving it with only one parent" % c.sha
+                    "skipped leaving it with only one parent" % c_sha
                 )
                 skipping = True
 
@@ -261,7 +262,7 @@ def plan(repo, sha2commit, dstRepoPath,
                 if subtree_prefix is None:
                     MergeCloned(
                         path = dstRepoPath,
-                        commit_sha = c.sha,
+                        commit_sha = c_sha,
                         message = m.message,
                         # original parents order is significant
                         extra_parents = [
@@ -271,7 +272,7 @@ def plan(repo, sha2commit, dstRepoPath,
                 else:
                     SubtreeMerge(
                         path = dstRepoPath,
-                        commit_sha = c.sha,
+                        commit_sha = c_sha,
                         message = m.message,
                         parent_sha = extra_parents[0].hexsha,
                         prefix = subtree_prefix
@@ -290,14 +291,14 @@ def plan(repo, sha2commit, dstRepoPath,
                 )
                 CherryPick(
                     path = dstRepoPath,
-                    commit_sha = c.sha,
+                    commit_sha = c_sha,
                     message = m.message
                 )
                 ResetCommitter()
 
             plan_heads(c, dstRepoPath)
 
-        if c.sha in breaks:
+        if c_sha in breaks:
             if at_least_one_in_trunk:
                 Interrupt(reason = "Interrupting as requested...")
 
@@ -310,12 +311,12 @@ def plan(repo, sha2commit, dstRepoPath,
                 )
                 ContinueCommitting(
                     path = dstRepoPath,
-                    commit_sha = c.sha
+                    commit_sha = c_sha
                 )
                 ResetCommitter()
             else:
                 print("Cannot interrupt on '%s' because no commits "
-                    "of this trunk are copied." % c.sha
+                    "of this trunk are copied." % c_sha
                 )
 
         prev_c = c

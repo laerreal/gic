@@ -17,6 +17,7 @@ from os.path import (
     isfile
 )
 from common import (
+    composite_type,
     pythonize,
     callco
 )
@@ -267,6 +268,16 @@ heads)."""
         help = """\
 Copy commits those are ancestors of selected tags only (including the tag)."""
     )
+    ap.add_argument("-i", "--insert-before",
+        type = composite_type(arg_type_SHA1_lower, arg_type_input_file),
+        action = 'append',
+        nargs = 2,
+        dest = "insertions",
+        metavar = ("SHA1", "COMMIT"),
+        help = """\
+Insert COMMIT before the commit with SHA1. COMMIT must be defined by a path
+of the patch file in 'git am' compatible format."""
+    )
 
     args = ap.parse_args()
 
@@ -395,7 +406,8 @@ Copy commits those are ancestors of selected tags only (including the tag)."""
         plan(repo, sha2commit, dstRepoPath,
             breaks = args.breaks,
             skips = args.skips,
-            main_stream_bits = ms_bits
+            main_stream_bits = ms_bits,
+            insertions = args.insertions
         )
 
         # remove temporal clone of the source repository

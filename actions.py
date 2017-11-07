@@ -25,6 +25,7 @@ __all__ = [
           , "CreateTag"
           , "DeleteTag"
           , "CollectGarbage"
+          , "ApplyPatchFile"
   , "ActionContext"
       , "GitContext"
   , "switch_context"
@@ -664,3 +665,25 @@ class DeleteTag(GitAction):
 class CollectGarbage(GitAction):
     def __call__(self):
         self.git("gc", "--aggressive", "--prune=all")
+
+class ApplyPatchFile(GitAction):
+    __slots__ = [
+        "patch_name"
+    ]
+
+    def __call__(self):
+        patch_name = self.patch_name
+
+        try:
+            self.git2("am", "--committer-date-is-author-date", patch_name)
+        except RuntimeError:
+            sys.stdout.write(self._stdout)
+            sys.stdout.flush()
+            sys.stderr.write(self._stderr)
+            sys.stderr.flush()
+
+            self.git("am", "--abort")
+
+            Interrupt(
+                reson = "Failed to apply the patch form file '%s'" % patch_name
+            )

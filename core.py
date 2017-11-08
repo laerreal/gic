@@ -226,7 +226,8 @@ insertions:
                     )
                     at_least_one_in_trunk = False
 
-        insertions = insertion_table.get(c_sha, [])
+        # `pop` is used to detect unused insert positions
+        insertions = insertion_table.pop(c_sha, [])
         for i in insertions:
             abs_i = abspath(i)
             ApplyPatchFile(
@@ -234,7 +235,12 @@ insertions:
                 patch_name = abs_i
             )
 
-        skipping = c_sha in skips
+        if c_sha in skips:
+            skipping = True
+
+            skips.remove(c_sha) # Detection of unused skips
+        else:
+            skipping = False
 
         if not skipping and len(c.parents) > 1:
             # Handle merge commit parent skipping.
@@ -339,6 +345,8 @@ insertions:
             plan_heads(c, dstRepoPath)
 
         if c_sha in breaks:
+            breaks.remove(c_sha) # Detection of unused breaks
+
             if at_least_one_in_trunk:
                 Interrupt(reason = "Interrupting as requested...")
 
@@ -385,6 +393,17 @@ insertions:
     for c in sha2commit.values():
         if not c.processed:
             print("Commit %s was not cloned!" % str(c.sha))
+
+    if breaks:
+        raise RuntimeError("Unused break(s): " + ", ".join(breaks))
+    if skips:
+        raise RuntimeError("Unused skip(s): " + ", ".join(skips))
+    if insertion_table:
+        raise RuntimeError("Unused insertion(s): " + ", ".join(
+            ("'%s'" % val + " before " + sha1)
+                for (sha1, vals) in insertion_table.items()
+                    for val in vals
+        ))
 
 def load_context(file_name):
     loaded = {}

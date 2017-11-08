@@ -3,6 +3,8 @@ __all__ = [
     "CommitDesc"
 ]
 
+from .antiset import antiset
+
 # Iterations Between Yields of Git Graph Building task
 GGB_IBY = 100
 
@@ -46,6 +48,9 @@ refs:
 
     References must be given by full path (E.g. refs/heads/may_branch)
         """
+
+        refs = antiset() if refs is None else set(refs)
+
         # iterations to yield
         i2y = GGB_IBY
 
@@ -67,7 +72,10 @@ refs:
                 continue
             if skip_stashes and head.path.startswith("refs/stash"):
                 continue
-            if refs and head.path not in refs:
+
+            if head.path in refs:
+                refs.remove(head.path) # unknown reference detection
+            else:
                 continue
 
             try:
@@ -157,3 +165,6 @@ refs:
                         i2y = GGB_IBY
                     else:
                         i2y -= 1
+
+        if not isinstance(refs, antiset) and refs:
+            raise ValueError("Unknown reference(s): " + ", ".join(refs))

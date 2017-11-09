@@ -120,12 +120,14 @@ one parent could be replaced with several parents.
         return [orig_parent]
 
     ret = []
-    stack = list(orig_parent.parents)
+    # Parent order is reversed to preserve main stream (zero index) commit
+    # priority in course of depth-first graph traversal.
+    stack = list(reversed(orig_parent.parents))
     while stack:
         p = stack.pop()
 
         if sha2commit[p.hexsha].skipped:
-            stack.extend(p.parents)
+            stack.extend(reversed(p.parents))
         else:
             ret.append(p)
 

@@ -176,9 +176,12 @@ class ActionContext(sloted):
         g.line("    a.q()")
 
 class GitContext(ActionContext):
-    __slots__ = ["_sha2commit", "src_repo_path", "_origin2cloned"]
+    __slots__ = ["_sha2commit", "src_repo_path", "_origin2cloned",
+                 "git_command", "_git_version"]
 
     def __init__(self, **kw):
+        kw.setdefault("git_command", "git")
+
         super(GitContext, self).__init__(**kw)
 
         self._sha2commit = {}
@@ -364,7 +367,7 @@ class GitAction(Action):
         if cwd != self.path:
             chdir(self.path)
 
-        command = ["git"]
+        command = [self._ctx.git_command]
         command.extend(cmd_args)
 
         p = Popen(command)
@@ -381,7 +384,7 @@ class GitAction(Action):
         if cwd != self.path:
             chdir(self.path)
 
-        command = ["git"]
+        command = [self._ctx.git_command]
         command.extend(cmd_args)
 
         p = Popen(command, stdout = PIPE, stderr = PIPE)

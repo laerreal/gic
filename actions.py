@@ -563,16 +563,19 @@ class SubtreeMerge(GitAction):
     __slots__ = ["commit_sha", "message", "parent_sha", "prefix"]
 
     def __call__(self):
-        sha2commit = self._ctx._sha2commit
+        ctx = self._ctx
+        sha2commit = ctx._sha2commit
         commit = sha2commit[self.commit_sha]
         message = self.message
         prefix = self.prefix
         parent = sha2commit[self.parent_sha]
 
-        # TODO --allow-unrelated-histories for Git >= 2.9
-        self.git("merge", "-s", "ours", "--no-commit",
-            parent.cloned_sha
-        )
+        if ctx._git_version >= (2, 9, 0):
+            self.git("merge", "-s", "ours", "--no-commit",
+                "--allow-unrelated-histories", parent.cloned_sha
+            )
+        else:
+            self.git("merge", "-s", "ours", "--no-commit", parent.cloned_sha)
 
         if exists(".gic"):
             rmtree(".gic")

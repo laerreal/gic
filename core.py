@@ -219,12 +219,26 @@ insertions:
                 at_least_one_in_trunk = False
             else:
                 # get real parents order
-                main_stream_sha = m.parents[0].hexsha
+                main_stream = m.parents[0]
+                main_stream_sha = main_stream.hexsha
                 if main_stream_sha != prev_c.sha:
+                    # main stream parent of the commit could be skipped...
+                    aps = get_actual_parents(main_stream, sha2commit)
+                    actual_main_stream_parent_sha = aps[0].hexsha
+
+                    if actual_main_stream_parent_sha != main_stream_sha:
+                        print("Main stream parent %s of %s is not available. "
+                            "Its ancestor %s will become a new trunk "
+                            "instead." % (
+                                main_stream_sha, c_sha,
+                                actual_main_stream_parent_sha
+                            )
+                        )
+
                     # jump to main stream commit
                     CheckoutCloned(
                         path = dstRepoPath,
-                        commit_sha = main_stream_sha
+                        commit_sha = actual_main_stream_parent_sha
                     )
                     at_least_one_in_trunk = False
 

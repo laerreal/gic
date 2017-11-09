@@ -187,6 +187,23 @@ class GitContext(ActionContext):
         self._sha2commit = {}
         self._origin2cloned = {}
 
+        # get version of git
+        git_version = Popen([self.git_command, "--version"],
+            stdout = PIPE,
+            stderr = PIPE
+        )
+        _stdout, _stderr = git_version.communicate()
+
+        if git_version.returncode:
+            raise RuntimeError(
+                "Cannot get version of git, underlying error:\n%s" % (
+                    "stdout:\n%s\nstderr:\n%s" % (_stdout, _stderr)
+                )
+            )
+
+        _, _, version = _stdout.split(b" ")[:3]
+        self._git_version = tuple(int(v) for v in version.split(b".")[:3])
+
     def __backup_cloned(self):
         origin2cloned = {}
 

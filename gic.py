@@ -314,6 +314,12 @@ Copy commits those are ancestors of selected tags only (including the tag)."""
 Insert COMMIT before the commit with SHA1. COMMIT must be defined by a path
 of the patch file in 'git am' compatible format."""
     )
+    ap.add_argument("-g", "--git",
+        type = arg_type_git,
+        default = "git",
+        metavar = "path/to/alternative/git",
+        help = """Use explicit git executable."""
+    )
 
     args = ap.parse_args()
 
@@ -353,6 +359,8 @@ of the patch file in 'git am' compatible format."""
                     )
                 )
 
+            git_cmd = args.git
+
             print("Cloning source repository into local temporal directory "
                 "'%s'" % cloned_source
             )
@@ -361,7 +369,7 @@ of the patch file in 'git am' compatible format."""
             if isdir(cloned_source):
                 rmtree(cloned_source)
 
-            cloning = Popen(["git", "clone", remote, cloned_source])
+            cloning = Popen([git_cmd, "clone", remote, cloned_source])
             cloning.wait()
 
             if cloning.returncode:
@@ -384,7 +392,7 @@ of the patch file in 'git am' compatible format."""
                     continue
 
                 add_branch = Popen(
-                    ["git", "branch", branch, ref.name],
+                    [git_cmd, "branch", branch, ref.name],
                     stdout = PIPE,
                     stderr = PIPE
                 )
@@ -403,7 +411,7 @@ of the patch file in 'git am' compatible format."""
 
             srcRepoPath = cloned_source
 
-        ctx = GitContext(src_repo_path = srcRepoPath)
+        ctx = GitContext(src_repo_path = srcRepoPath, git_command = git_cmd)
         switch_context(ctx)
     else:
         srcRepoPath = ctx.src_repo_path

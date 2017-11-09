@@ -209,6 +209,42 @@ def arg_type_git_head_name(string):
 def arg_type_git_tag_name(string):
     return arg_type_git_ref_name_internal("tag", string)
 
+def arg_type_git(string):
+    try:
+        alt_git = Popen([string, "--version"], stdout = PIPE, stderr = PIPE)
+    except:
+        raise ArgumentTypeError("Cannot launch '%s', underlying error:\n%s" % (
+            string, format_exc()
+        ))
+
+    _stdout, _stderr = alt_git.communicate()
+    if alt_git.returncode:
+        raise ArgumentTypeError("Launch of '%s --version' failed\n%s" % (
+            string,
+            "stdout:\n%s\nstderr:\n%s" % (_stdout, _stderr)
+        ))
+
+    try:
+        words = _stdout.split(b" ")
+        if len(words) < 3:
+            raise ValueError(
+                "Too few words %d, expected at least 3." % len(words)
+            )
+    except:
+        raise ArgumentTypeError(
+            "Cannot tokenize output\n%s\nunderlying error:\n%s" % (
+                _stdout, format_exc()
+        ))
+
+    if [b"git", b"version"] != words[0:2]:
+        raise ArgumentTypeError(
+            "Unexpected version string '%s', expected 'git version ...'" % (
+                b" ".join(words[0:3]) # add third word
+            )
+        )
+
+    return string
+
 STATE_FILE_NAME = ".gic-state.py"
 
 def main():

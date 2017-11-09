@@ -348,7 +348,15 @@ insertions:
             breaks.remove(c_sha) # Detection of unused breaks
 
             if at_least_one_in_trunk:
-                Interrupt(reason = "Interrupting as requested...")
+                # Note that SHA1 of the cloned commit is unknown now.
+                # Hence, use its message to identify it for a user.
+                try:
+                    msg = m.message.split("\n")[0]
+                except IndexError:
+                    msg = " after empty message commit %s" % c_sha
+                else:
+                    msg = " after '%s'" % msg
+                Interrupt(reason = "Interrupting%s as requested..." % msg)
 
                 # Update committer name, e-mail and date after user actions.
                 SetCommitter(

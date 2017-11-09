@@ -1,0 +1,105 @@
+bug in cherry-pick
+------------------
+
+Consider a git graph:
+
+...A
+
+...B --> C...
+
+Let A`s tree is:
+
+    a-directory (submodule)
+    my-file
+
+Let B`s tree is:
+
+    a-directory (a directory previously embedded using a subtree merge)
+    my-file
+
+Let C only changes my-file.
+
+Let working directory is clear and current version (HEAD) is A.
+
+Then `git cherry-pick C` failed reporting conflict with `a-directory`.
+
+investigation
+-------------
+
+git version 2.11.0.200.g95d0367 - good
+git version 2.11.0.76.g1749053 - good
+git version 2.11.0.51.g2cf8c90 - good
+git version 2.11.0.35.ga616162 - good
+git version 2.11.0.rc1.1.g5423d2e - good
+
+commit 5423d2e7005eca89481d3137569b2b96b4d133ff - first good commit
+Author: David Turner <dturner@twosigma.com>
+Date:   Mon Nov 7 13:31:31 2016 -0500
+
+    submodules: allow empty working-tree dirs in merge/cherry-pick
+
+    When a submodule is being merged or cherry-picked into a working
+    tree that already contains a corresponding empty directory, do not
+    record a conflict.
+
+    One situation where this bug appears is:
+
+    - Commit 1 adds a submodule
+    - Commit 2 removes that submodule and re-adds it into a subdirectory
+           (sub1 to sub1/sub1).
+    - Commit 3 adds an unrelated file.
+
+    Now the user checks out commit 1 (first deinitializing the submodule),
+    and attempts to cherry-pick commit 3.  Previously, this would fail,
+    because the incoming submodule sub1/sub1 would falsely conflict with
+    the empty sub1 directory.
+
+    This patch ignores the empty sub1 directory, fixing the bug.  We only
+    ignore the empty directory if the object being emplaced is a
+    submodule, which expects an empty directory.
+
+    Signed-off-by: David Turner <dturner@twosigma.com>
+    Signed-off-by: Junio C Hamano <gitster@pobox.com>
+
+:100644 100644 9041c2f149c01134ce02119354455894533e713c e64b48b25da2a53851aa40cf149e510641c23a8d M	merge-recursive.c
+:040000 040000 e2a3651d7ee16fb96831db1b2847b7088f6edb1e 51c8fe10b1b36c0a26128d15fe4b207ab0378cc5 M	t
+
+git version 2.11.0.33.g598119d - bad
+git version 2.11.0.27.gad9d734 - bad
+git version 2.11.0.21.ga274e0a - bad
+git version 2.11.0.rc2.2.geb0224c - bad
+
+bisect log (good & bad are inverted)
+------------------------------------
+$ git bisect log
+git bisect start
+# bad: [7668cbc60578f99a4c048f8f8f38787930b8147b] RelNotes: the second batch post 2.15 comes
+git bisect bad 7668cbc60578f99a4c048f8f8f38787930b8147b
+# good: [937978e0f3e750d917768c77665d5f8cfbd802b6] Git 2.7.4
+git bisect good 937978e0f3e750d917768c77665d5f8cfbd802b6
+# bad: [0c0e0fd0cade11bd9a823d24d2f70faea4d02dee] Merge branch 'sb/unpack-trees-cleanup'
+git bisect bad 0c0e0fd0cade11bd9a823d24d2f70faea4d02dee
+# good: [702ebbf4e2937accbac8184f87932f961e626a63] Merge branch 'mh/update-ref-errors'
+git bisect good 702ebbf4e2937accbac8184f87932f961e626a63
+# good: [883ac0223739cdbb85f1176e49fc8aafd36dacca] Merge branch 'dt/mailinfo'
+git bisect good 883ac0223739cdbb85f1176e49fc8aafd36dacca
+# good: [eb0224c617ba6b4299f2a9f85d6c4b3b5e10abc0] archive: read local configuration
+git bisect good eb0224c617ba6b4299f2a9f85d6c4b3b5e10abc0
+# bad: [95d0367b2e397080d37c4b82dbd2ba10ffa262dc] Merge branch 'sb/submodule-config-cleanup'
+git bisect bad 95d0367b2e397080d37c4b82dbd2ba10ffa262dc
+# bad: [1749053d0278f2a533f79915f03c379e5f738b39] Merge branch 'jc/renormalize-merge-kill-safer-crlf'
+git bisect bad 1749053d0278f2a533f79915f03c379e5f738b39
+# good: [a274e0a036ea886a31f8b216564ab1b4a3142f6c] Sync with maint-2.10
+git bisect good a274e0a036ea886a31f8b216564ab1b4a3142f6c
+# bad: [2cf8c9053afbb666dc30f384d313e3e85e00d53a] Merge branch 'nd/worktree-list-fixup'
+git bisect bad 2cf8c9053afbb666dc30f384d313e3e85e00d53a
+# bad: [a616162909ae756c36cef17cea7466c3f500caec] Merge branch 'dt/empty-submodule-in-merge'
+git bisect bad a616162909ae756c36cef17cea7466c3f500caec
+# good: [ad9d7346b3643a09ee6586218b7436063ebd809b] Merge branch 'ew/svn-fixes'
+git bisect good ad9d7346b3643a09ee6586218b7436063ebd809b
+# good: [598119d3cdd59b750bd33da639cf2cc6a6675199] Merge branch 'jk/rev-parse-symbolic-parents-fix'
+git bisect good 598119d3cdd59b750bd33da639cf2cc6a6675199
+# bad: [5423d2e7005eca89481d3137569b2b96b4d133ff] submodules: allow empty working-tree dirs in merge/cherry-pick
+git bisect bad 5423d2e7005eca89481d3137569b2b96b4d133ff
+# first bad commit: [5423d2e7005eca89481d3137569b2b96b4d133ff] submodules: allow empty working-tree dirs in merge/cherry-pick
+

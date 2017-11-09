@@ -309,13 +309,13 @@ insertions:
                 subtree_prefix = None if len(c.parents) != 2 else is_subtree(m)
 
                 SetAuthor(
-                    author_name = m.author.name.encode("utf-8"),
+                    author_name = m.author.name,
                     author_email = m.author.email,
                     authored_date = m.authored_date,
                     author_tz_offset = m.author_tz_offset
                 )
                 SetCommitter(
-                    committer_name = m.committer.name.encode("utf-8"),
+                    committer_name = m.committer.name,
                     committer_email = m.committer.email,
                     committed_date = m.committed_date,
                     committer_tz_offset = m.committer_tz_offset
@@ -346,7 +346,7 @@ insertions:
             else:
                 # Note that author is set by cherry-pick
                 SetCommitter(
-                    committer_name = m.committer.name.encode("utf-8"),
+                    committer_name = m.committer.name,
                     committer_email = m.committer.email,
                     committed_date = m.committed_date,
                     committer_tz_offset = m.committer_tz_offset
@@ -376,7 +376,7 @@ insertions:
 
                 # Update committer name, e-mail and date after user actions.
                 SetCommitter(
-                    committer_name = m.committer.name.encode("utf-8"),
+                    committer_name = m.committer.name,
                     committer_email = m.committer.email,
                     committed_date = m.committed_date,
                     committer_tz_offset = m.committer_tz_offset

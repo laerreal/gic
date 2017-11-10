@@ -141,6 +141,7 @@ class ActionContext(sloted):
 
         self.interrupted = False
         self._doing = True
+        ret = True
 
         while not self.interrupted:
             # This construction allows to switch i from within loop body. While
@@ -155,7 +156,8 @@ class ActionContext(sloted):
             except:
                 print("Failed on %s" % a)
                 print_exc(file = sys.stdout)
-                return False
+                ret = False
+                break
 
             if extra_actions:
                 next_idx = idx + 1
@@ -173,7 +175,7 @@ class ActionContext(sloted):
         self._doing = False
         self.current_action = idx + 1
 
-        return True
+        return ret
 
     @property
     def finished(self):

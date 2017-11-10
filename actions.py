@@ -25,7 +25,8 @@ __all__ = [
           , "CreateTag"
           , "DeleteTag"
           , "CollectGarbage"
-          , "ApplyPatchFile"
+          , "PatchFileAction"
+              , "ApplyPatchFile"
   , "ActionContext"
       , "GitContext"
   , "switch_context"
@@ -708,11 +709,10 @@ class CollectGarbage(GitAction):
     def __call__(self):
         self.git("gc", "--aggressive", "--prune=all")
 
-class ApplyPatchFile(GitAction):
-    __slots__ = [
-        "patch_name"
-    ]
+class PatchFileAction(GitAction):
+    __slots__ = ["patch_name"]
 
+class ApplyPatchFile(PatchFileAction):
     def __call__(self):
         patch_name = self.patch_name
 

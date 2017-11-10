@@ -49,10 +49,6 @@ from os.path import (
     join,
     exists
 )
-from subprocess import (
-    PIPE,
-    Popen
-)
 from time import (
     mktime,
     strptime,
@@ -61,26 +57,11 @@ from time import (
 )
 from traceback import print_exc
 import sys
-from common import sloted
-
-from six import PY3
-
-if PY3:
-    def outbytes(*args):
-        sys.stdout.buffer.write(*args)
-        sys.stdout.flush()
-
-    def errbytes(*args):
-        sys.stderr.buffer.write(*args)
-        sys.stderr.flush()
-else:
-    def outbytes(*args):
-        sys.stdout.write(*args)
-        sys.stdout.flush()
-
-    def errbytes(*args):
-        sys.stderr.write(*args)
-        sys.stderr.flush()
+from common import (
+    sloted,
+    launch,
+    LaunchFailed
+)
 
 current_context = None
 
@@ -211,18 +192,9 @@ class GitContext(ActionContext):
         self._origin2cloned = {}
 
         # get version of git
-        git_version = Popen([self.git_command, "--version"],
-            stdout = PIPE,
-            stderr = PIPE
+        _stdout, _stderr = launch([self.git_command, "--version"],
+            epfx = "Cannot get version of git"
         )
-        _stdout, _stderr = git_version.communicate()
-
-        if git_version.returncode:
-            raise RuntimeError(
-                "Cannot get version of git, underlying error:\n%s" % (
-                    "stdout:\n%s\nstderr:\n%s" % (_stdout, _stderr)
-                )
-            )
 
         _, _, version = _stdout.split(b" ")[:3]
         self._git_version = tuple(int(v) for v in version.split(b".")[:3])
@@ -407,16 +379,7 @@ class GitAction(Action):
         if cwd != self.path:
             chdir(self.path)
 
-        command = [self._ctx.git_command]
-        command.extend(cmd_args)
-
-        p = Popen(command)
-        p.wait()
-
-        if p.returncode != 0:
-            raise RuntimeError("Command failed: %s" % command)
-
-        return p
+        launch((self._ctx.git_command,) + cmd_args, flush = True)
 
     def git2(self, *cmd_args):
         cwd = getcwd()
@@ -424,17 +387,9 @@ class GitAction(Action):
         if cwd != self.path:
             chdir(self.path)
 
-        command = [self._ctx.git_command]
-        command.extend(cmd_args)
-
-        p = Popen(command, stdout = PIPE, stderr = PIPE)
-
-        self._stdout, self._stderr = p.communicate()
-
-        if p.returncode != 0:
-            raise RuntimeError("Command failed: %s" % command)
-
-        return p
+        self._stdout, self._stderr = launch(
+            (self._ctx.git_command,) + cmd_args
+        )
 
     def get_conflicts(self):
         self.git2("diff", "--name-only", "--diff-filter=U")
@@ -519,7 +474,7 @@ class MergeCloned(GitAction):
                 "-m", message,
                 *[ p.cloned_sha for p in extra_parents ]
             )
-        except RuntimeError as e:
+        except LaunchFailed as e:
             # conflicts?
             conflicts = self.get_conflicts()
 
@@ -644,20 +599,15 @@ class CherryPick(GitAction):
 
         try:
             self.git("cherry-pick", c.sha)
-        except RuntimeError as e:
-            if b"--allow-empty" in self._stderr:
+        except LaunchFailed as e:
+            if b"--allow-empty" in e._stderr:
                 self.git("commit", "--allow-empty", "-m", self.message)
             else:
-                # preserve cached output for debug message
-                _stdout, _stderr = self._stdout, self._stderr
-
                 # conflicts?
                 conflicts = self.get_conflicts()
 
                 if not conflicts:
                     # there is something else...
-                    outbytes(_stdout)
-                    errbytes(_stderr)
                     raise e
 
                 # let user to resolve conflict by self
@@ -718,11 +668,8 @@ class ApplyPatchFile(PatchFileAction):
         patch_name = self.patch_name
 
         try:
-            self.git2("am", "--committer-date-is-author-date", patch_name)
-        except RuntimeError:
-            outbytes(self._stdout)
-            errbytes(self._stderr)
-
+            self.git("am", "--committer-date-is-author-date", patch_name)
+        except LaunchFailed:
             self.git("am", "--abort")
 
             Interrupt(

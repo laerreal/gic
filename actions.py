@@ -723,5 +723,5 @@ class ApplyPatchFile(GitAction):
             self.git("am", "--abort")
 
             Interrupt(
-                reson = "Failed to apply the patch form file '%s'" % patch_name
+                reason = "Failed to apply the patch form file '%s'" % patch_name
             )

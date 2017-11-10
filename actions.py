@@ -643,7 +643,7 @@ class CherryPick(GitAction):
         c = ctx._sha2commit[self.commit_sha]
 
         try:
-            self.git2("cherry-pick", c.sha)
+            self.git("cherry-pick", c.sha)
         except RuntimeError as e:
             if b"--allow-empty" in self._stderr:
                 self.git("commit", "--allow-empty", "-m", self.message)

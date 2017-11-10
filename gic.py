@@ -26,10 +26,7 @@ from traceback import (
     print_exc,
     format_exc
 )
-from sys import (
-    stdout,
-    stderr
-)
+import sys
 from os import (
     mkdir,
     rmdir,
@@ -310,7 +307,7 @@ of the patch file in 'git am' compatible format."""
             ctx = load_context(STATE_FILE_NAME)
         except:
             print("Incorrect state file")
-            print_exc(file = stdout)
+            print_exc(file = sys.stdout)
 
     cloned_source = None
 
@@ -319,7 +316,7 @@ of the patch file in 'git am' compatible format."""
 
         if source is None:
             print("No source repository path was given.")
-            ap.print_help(stdout)
+            ap.print_help(sys.stdout)
             return
 
         try:
@@ -355,7 +352,7 @@ of the patch file in 'git am' compatible format."""
                     epfx = "Cloning has failed"
                 )
             except:
-                stderr.write("\n" + format_exc())
+                sys.stderr.write("\n" + format_exc())
                 rmtree(cloned_source)
                 exit(1)
 
@@ -382,7 +379,7 @@ of the patch file in 'git am' compatible format."""
                 except:
                     chdir(init_cwd)
                     rmtree(cloned_source)
-                    stderr.write("\n" + format_exc())
+                    sys.stderr.write("\n" + format_exc())
                     exit(1)
 
             chdir(init_cwd)

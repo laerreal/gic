@@ -10,8 +10,9 @@ from actions import *
 
 from os.path import abspath
 
-from six import PY2
-if not PY2:
+import sys
+
+if sys.version_info[0] != 2:
     def execfile(filename, globals = None, locals = None):
         f = open(filename, "rb")
         content = f.read()

@@ -17,6 +17,7 @@ from os.path import (
     isfile
 )
 from common import (
+    launch,
     composite_type,
     pythonize,
     callco
@@ -25,7 +26,10 @@ from traceback import (
     print_exc,
     format_exc
 )
-from sys import stdout
+from sys import (
+    stdout,
+    stderr
+)
 from os import (
     mkdir,
     rmdir,
@@ -36,10 +40,6 @@ from os import (
 )
 from shutil import rmtree
 from itertools import count
-from subprocess import (
-    PIPE,
-    Popen
-)
 from core import (
     GICCommitDesc,
     plan,
@@ -53,19 +53,13 @@ def arg_type_directory(string):
 
 def arg_type_git_remote(string):
     # See: https://stackoverflow.com/questions/9610131/how-to-check-the-validity-of-a-remote-git-repository-url
-    test_command = Popen(["git", "ls-remote", string],
-        stdout = PIPE,
-        stderr = PIPE,
-    )
-    _stdout, _stderr = test_command.communicate()
-
-    if test_command.returncode:
-        raise ArgumentTypeError("Cannot handle '%s' as a Git repository, "
-            "underlying error:\n%s" % (
-                string,
-                "stdout:\n%s\nstderr:\n%s" % (_stdout, _stderr)
-            )
+    try:
+        launch(["git", "ls-remote", string],
+            epfx = "Cannot handle '%s' as a Git repository" % string
         )
+    except:
+        raise ArgumentTypeError("\n" + format_exc())
+
     return string
 
 def arg_type_git_repository(string):
@@ -187,19 +181,13 @@ def arg_type_SHA1_lower(string):
 def arg_type_git_ref_name_internal(ref, string):
     full_name = "refs/%ss/%s" % (ref, string)
 
-    check_ref_format = Popen(
-        ["git", "check-ref-format", full_name],
-        stdout = PIPE,
-        stderr = PIPE
-    )
-
-    _stdout, _stderr = check_ref_format.communicate()
-    if check_ref_format.returncode:
-        raise ArgumentTypeError("Incorrect %s name '%s' (%s), Git stdout:\n"
-            "%s\nstderr:\n%s\n" % (
-                ref, string, full_name, _stdout, _stderr
-            )
+    try:
+        launch(
+            ["git", "check-ref-format", full_name],
+            epfx = "Incorrect %s name '%s' (%s)" % (ref, string, full_name)
         )
+    except:
+        raise ArgumentTypeError("\n" + format_exc())
 
     return full_name
 
@@ -211,18 +199,11 @@ def arg_type_git_tag_name(string):
 
 def arg_type_git(string):
     try:
-        alt_git = Popen([string, "--version"], stdout = PIPE, stderr = PIPE)
+        _stdout, _ = launch([string, "--version"],
+            epfx = "Launch of '%s --version' failed" % string
+        )
     except:
-        raise ArgumentTypeError("Cannot launch '%s', underlying error:\n%s" % (
-            string, format_exc()
-        ))
-
-    _stdout, _stderr = alt_git.communicate()
-    if alt_git.returncode:
-        raise ArgumentTypeError("Launch of '%s --version' failed\n%s" % (
-            string,
-            "stdout:\n%s\nstderr:\n%s" % (_stdout, _stderr)
-        ))
+        raise ArgumentTypeError("\n" + format_exc())
 
     try:
         words = _stdout.split(b" ")
@@ -369,12 +350,14 @@ of the patch file in 'git am' compatible format."""
             if isdir(cloned_source):
                 rmtree(cloned_source)
 
-            cloning = Popen([git_cmd, "clone", remote, cloned_source])
-            cloning.wait()
-
-            if cloning.returncode:
+            try:
+                launch([git_cmd, "clone", remote, cloned_source],
+                    epfx = "Cloning has failed"
+                )
+            except:
+                stderr.write("\n" + format_exc())
                 rmtree(cloned_source)
-                raise RuntimeError("Cloning has failed.")
+                exit(1)
 
             # create all branches in temporal copy
             tmp_repo = Repo(cloned_source)
@@ -391,21 +374,16 @@ of the patch file in 'git am' compatible format."""
                 if branch == "HEAD" or branch == "master":
                     continue
 
-                add_branch = Popen(
-                    [git_cmd, "branch", branch, ref.name],
-                    stdout = PIPE,
-                    stderr = PIPE
-                )
-                _stdout, _stderr = add_branch.communicate()
-
-                if add_branch.returncode:
+                try:
+                    launch([git_cmd, "branch", branch, ref.name],
+                        epfx = "Cannot create tracking branch '%s' in temporal"
+                        " copy of origin repository" % branch
+                    )
+                except:
                     chdir(init_cwd)
                     rmtree(cloned_source)
-
-                    raise RuntimeError("Cannot create tracking branch '%s' "
-                        "in temporal copy of origin repository, Git stdout:\n"
-                        "%s\nstderr:\n%s\n" % (branch, _stdout, _stderr)
-                    )
+                    stderr.write("\n" + format_exc())
+                    exit(1)
 
             chdir(init_cwd)
 

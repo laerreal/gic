@@ -61,6 +61,25 @@ from traceback import print_exc
 import sys
 from common import sloted
 
+from six import PY3
+
+if PY3:
+    def outbytes(*args):
+        sys.stdout.buffer.write(*args)
+        sys.stdout.flush()
+
+    def errbytes(*args):
+        sys.stderr.buffer.write(*args)
+        sys.stderr.flush()
+else:
+    def outbytes(*args):
+        sys.stdout.write(*args)
+        sys.stdout.flush()
+
+    def errbytes(*args):
+        sys.stderr.write(*args)
+        sys.stderr.flush()
+
 current_context = None
 
 def switch_context(ctx):
@@ -633,10 +652,8 @@ class CherryPick(GitAction):
 
                 if not conflicts:
                     # there is something else...
-                    sys.stdout.write(_stdout)
-                    sys.stdout.flush()
-                    sys.stderr.write(_stderr)
-                    sys.stderr.flush()
+                    outbytes(_stdout)
+                    errbytes(_stderr)
                     raise e
 
                 # let user to resolve conflict by self
@@ -700,10 +717,8 @@ class ApplyPatchFile(GitAction):
         try:
             self.git2("am", "--committer-date-is-author-date", patch_name)
         except RuntimeError:
-            sys.stdout.write(self._stdout)
-            sys.stdout.flush()
-            sys.stderr.write(self._stderr)
-            sys.stderr.flush()
+            outbytes(self._stdout)
+            errbytes(self._stderr)
 
             self.git("am", "--abort")
 

@@ -27,6 +27,7 @@ __all__ = [
           , "CollectGarbage"
           , "PatchFileAction"
               , "ApplyPatchFile"
+              , "HEAD2PatchFile"
   , "ActionContext"
       , "GitContext"
   , "switch_context"
@@ -727,3 +728,13 @@ class ApplyPatchFile(PatchFileAction):
             Interrupt(
                 reason = "Failed to apply the patch form file '%s'" % patch_name
             )
+
+class HEAD2PatchFile(PatchFileAction):
+    def __call__(self):
+        patch_name = self.patch_name
+
+        self.git2("format-patch", "--stdout", "HEAD~1")
+
+        f = open(patch_name, "wb")
+        f.write(self._stdout)
+        f.close()

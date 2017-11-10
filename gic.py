@@ -373,8 +373,8 @@ of the patch file in 'git am' compatible format."""
             cloning.wait()
 
             if cloning.returncode:
-                raise RuntimeError("Cloning has failed.")
                 rmtree(cloned_source)
+                raise RuntimeError("Cloning has failed.")
 
             # create all branches in temporal copy
             tmp_repo = Repo(cloned_source)

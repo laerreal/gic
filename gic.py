@@ -326,11 +326,9 @@ of the patch file in 'git am' compatible format."""
             return
 
         try:
-            remote = arg_type_git_remote_or_local(source)
+            local = arg_type_git_local(source)
         except ArgumentTypeError:
-            # Source points to a local repository.
-            srcRepoPath = source
-        else:
+            remote = source
             # Source points to a remote repository. It must be cloned first
             # because git.Repo cannot work with a remote repository.
             cloned_source = join(init_cwd, ".gic-cloned-source")
@@ -389,6 +387,9 @@ of the patch file in 'git am' compatible format."""
             chdir(init_cwd)
 
             srcRepoPath = cloned_source
+        else:
+            # Source points to a local repository.
+            srcRepoPath = local
 
         ctx = GitContext(src_repo_path = srcRepoPath, git_command = git_cmd)
         switch_context(ctx)

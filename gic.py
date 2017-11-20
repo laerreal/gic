@@ -75,19 +75,10 @@ def arg_type_git_local(string):
 
 def arg_type_git_repository(string):
     try:
-        string = arg_type_directory(string)
+        string = arg_type_git_local(string)
     except ArgumentTypeError:
-        # It is not a directory. It could be a remote.
+        # It is not a local repository. It could be a remote.
         string = arg_type_git_remote(string)
-    else:
-        # It s a directory. Check if it is a Git repository.
-        try:
-            Repo(string)
-        except:
-            raise ArgumentTypeError("Cannot open directory '%s' as a Git "
-                "repository, underlying error:\n %s" % (
-                    string, format_exc()
-            ))
 
     return string
 

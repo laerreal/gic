@@ -312,6 +312,7 @@ of the patch file in 'git am' compatible format."""
     cloned_source = None
 
     if ctx is None:
+        git_cmd = args.git
         source = args.source
 
         if source is None:
@@ -336,8 +337,6 @@ of the patch file in 'git am' compatible format."""
                         cloned_source, format_exc()
                     )
                 )
-
-            git_cmd = args.git
 
             print("Cloning source repository into local temporal directory "
                 "'%s'" % cloned_source

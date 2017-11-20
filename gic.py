@@ -48,7 +48,7 @@ def arg_type_directory(string):
         raise ArgumentTypeError("'%s' is not a directory" % string)
     return string
 
-def arg_type_git_remote(string):
+def arg_type_git_remote_or_local(string):
     # See: https://stackoverflow.com/questions/9610131/how-to-check-the-validity-of-a-remote-git-repository-url
     try:
         launch(["git", "ls-remote", string],
@@ -78,7 +78,7 @@ def arg_type_git_repository(string):
         string = arg_type_git_local(string)
     except ArgumentTypeError:
         # It is not a local repository. It could be a remote.
-        string = arg_type_git_remote(string)
+        string = arg_type_git_remote_or_local(string)
 
     return string
 
@@ -326,7 +326,7 @@ of the patch file in 'git am' compatible format."""
             return
 
         try:
-            remote = arg_type_git_remote(source)
+            remote = arg_type_git_remote_or_local(source)
         except ArgumentTypeError:
             # Source points to a local repository.
             srcRepoPath = source

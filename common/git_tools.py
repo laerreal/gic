@@ -4,6 +4,7 @@ __all__ = [
 ]
 
 from .antiset import antiset
+from .co_dispatcher import callco
 
 # Iterations Between Yields of Git Graph Building task
 GGB_IBY = 100
@@ -168,3 +169,8 @@ refs:
 
         if not isinstance(refs, antiset) and refs:
             raise ValueError("Unknown reference(s): " + ", ".join(refs))
+
+    @classmethod
+    def build_git_graph(klass, *args, **kw):
+        """ Wrapper for co_build_git_graph """
+        callco(klass.co_build_git_graph(*args, **kw))

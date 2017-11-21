@@ -17,7 +17,7 @@ class sloted(object):
 
     def gen_by_slots(self, gen, **extra):
         """ Helper for implementation of __gen_code__ for PyGenerator API. """
-        all_slots = []
+        slots2gen = []
         for klass in type(self).__mro__:
             try:
                 slots = klass.__slots__
@@ -27,13 +27,13 @@ class sloted(object):
             for attr in reversed(slots):
                 if attr.startswith("_"):
                     continue
-                if attr in all_slots:
+                if attr in slots2gen:
                     continue
-                all_slots.append(attr)
+                slots2gen.append(attr)
 
         gen.reset_gen(self)
 
-        for attr in reversed(all_slots):
+        for attr in reversed(slots2gen):
             gen.gen_field(attr + " = ")
             try:
                 gen.pprint(getattr(self, attr))

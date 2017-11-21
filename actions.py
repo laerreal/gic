@@ -4,6 +4,7 @@ __all__ = [
       , "FSAction"
           , "RemoveDirectory"
           , "ProvideDirectory"
+          , "RemoveFile"
       , "SetCommitter"
       , "ResetCommitter"
       , "SetAuthor"
@@ -332,6 +333,11 @@ class RemoveDirectory(FSAction):
 class ProvideDirectory(FSAction):
     def __call__(self):
         makedirs(self.path)
+
+class RemoveFile(FSAction):
+    def __call__(self):
+        if exists(self.path):
+            unlink(self.path)
 
 class SetCommitter(Action):
     __slots__ = ["committer_name", "committer_email", "committed_date",

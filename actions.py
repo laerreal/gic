@@ -183,10 +183,14 @@ class GitContext(ActionContext):
     __slots__ = ["_sha2commit", "src_repo_path", "_origin2cloned",
                  "git_command", "_git_version"]
 
-    def __init__(self, **kw):
-        kw.setdefault("git_command", "git")
-
-        super(GitContext, self).__init__(**kw)
+    def __init__(self,
+        git_command = "git",
+        **kw
+    ):
+        super(GitContext, self).__init__(
+            git_command = git_command,
+            **kw
+        )
 
         self._sha2commit = {}
         self._origin2cloned = {}

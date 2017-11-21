@@ -49,7 +49,11 @@ class sloted(object):
             gen.gen_field(attr + " = ")
             gen.pprint(val)
 
-        for k, v in extra.items():
-            gen.gen_field(k + " = " + gen.gen_const(v))
+        for k, val in extra.items():
+            if (k in defaults) and (defaults[k] == val):
+                continue
+
+            gen.gen_field(k + " = ")
+            gen.pprint(val)
 
         gen.gen_end()

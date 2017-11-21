@@ -35,10 +35,7 @@ class sloted(object):
 
         for attr in reversed(slots2gen):
             gen.gen_field(attr + " = ")
-            try:
-                gen.pprint(getattr(self, attr))
-            except BaseException as e:
-                raise e
+            gen.pprint(getattr(self, attr))
 
         for k, v in extra.items():
             gen.gen_field(k + " = " + gen.gen_const(v))

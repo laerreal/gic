@@ -1,6 +1,7 @@
 __all__ = ["sloted"]
 
 from .reflection import get_class_total_args
+from inspect import getmro
 
 class sloted(object):
     __slots__ = ["__dfs_visited__"]
@@ -22,7 +23,7 @@ class sloted(object):
         self_type = type(self)
 
         slots2gen = []
-        for klass in self_type.__mro__:
+        for klass in getmro(self_type):
             try:
                 slots = klass.__slots__
             except AttributeError:

@@ -51,6 +51,8 @@ from os.path import (
     exists
 )
 from time import (
+    time,
+    timezone,
     mktime,
     strptime,
     gmtime,
@@ -63,6 +65,7 @@ from common import (
     launch,
     LaunchFailed
 )
+from six import b
 
 current_context = None
 
@@ -75,6 +78,39 @@ def switch_context(ctx):
     ret = current_context
     current_context = ctx
     return ret
+
+def csv_excape(cell):
+    if b";" in cell:
+        # Note that quotes (") inside quoted cell seems to be supported
+        return b'"' + cell + b'"'
+    else:
+        return cell
+
+class CSVLogFormatter(sloted):
+    __slots__ = ["writer", "kind"]
+
+    def write(self, data):
+        timestamp = b(dt(time(), timezone))
+
+        # attribute lookup optimization
+        kind = self.kind
+        write = self.writer.write
+
+        for ll in data.split(b"\r"):
+            # Two different line separators one by one is one line separator.
+            stripped = ll.strip(b"\n")
+
+            liter = iter(stripped.split(b"\n"))
+
+            # This forward scan logic omits last empty line. I.e. if last byte
+            # of data is the line separator.
+            prev_line = csv_excape(next(liter))
+            for line in liter:
+                write(timestamp + b";" + kind + b";" + prev_line + b";\n")
+                prev_line = csv_excape(line)
+            else:
+                if prev_line:
+                    write(timestamp + b";" + kind + b";" + prev_line + b";\n")
 
 class ActionContext(sloted):
     __slots__ = ["_actions", "current_action", "interrupted", "_doing",

@@ -31,6 +31,7 @@ __all__ = [
               , "HEAD2PatchFile"
   , "ActionContext"
       , "GitContext"
+  , "LOG_STANDARD"
   , "switch_context"
 ]
 
@@ -112,13 +113,21 @@ class CSVLogFormatter(sloted):
                 if prev_line:
                     write(timestamp + b";" + kind + b";" + prev_line + b";\n")
 
+# Just not a `str`
+LOG_STANDARD = object()
+
+# Python 2 & 3 compatibility
+raw_stdout = getattr(sys.stdout, 'buffer', sys.stdout)
+raw_stderr = getattr(sys.stderr, 'buffer', sys.stderr)
+
 class ActionContext(sloted):
     __slots__ = ["_actions", "current_action", "interrupted", "_doing",
-                 "_extra_actions"]
+                 "_extra_actions", "_out_log", "_err_log", "_log_io"]
 
     def __init__(self,
         current_action = -1,
         interrupted = False,
+        log = LOG_STANDARD,
         ** kw
     ):
         super(ActionContext, self).__init__(
@@ -130,6 +139,30 @@ class ActionContext(sloted):
         self._actions = []
         self._extra_actions = []
         self._doing = False
+
+        self._log_io = None
+        # properties is not compatible with slots
+        self.log = log
+
+    @property
+    def log(self):
+        if self._out_log is raw_stdout:
+            return LOG_STANDARD
+        else:
+            return self._log_io.name
+
+    @log.setter
+    def log(self, value):
+        if self._log_io:
+            self._log_io.close()
+            self._log_io = None
+
+        if value is LOG_STANDARD:
+            self._out_log, self._err_log = raw_stdout, raw_stderr
+        else:
+            self._log_io = writer = open(value, "ab+")
+            self._out_log = CSVLogFormatter(writer = writer, kind = b"stdout")
+            self._err_log = CSVLogFormatter(writer = writer, kind = b"stderr")
 
     def interrupt(self):
         self.interrupted = True
@@ -205,7 +238,7 @@ class ActionContext(sloted):
         return list(self._actions)
 
     def __gen_code__(self, g):
-        self.gen_by_slots(g)
+        self.gen_by_slots(g, log = self.log)
 
         g.line("switch_context(" + g.nameof(self) + ")")
         g.line()

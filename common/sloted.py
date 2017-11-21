@@ -25,6 +25,8 @@ class sloted(object):
                 continue
 
             for attr in reversed(slots):
+                if attr.startswith("_"):
+                    continue
                 if attr in all_slots:
                     continue
                 all_slots.append(attr)
@@ -32,8 +34,6 @@ class sloted(object):
         gen.reset_gen(self)
 
         for attr in reversed(all_slots):
-            if attr.startswith("_"):
-                continue
             gen.gen_field(attr + " = ")
             try:
                 gen.pprint(getattr(self, attr))

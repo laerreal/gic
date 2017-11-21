@@ -6,6 +6,7 @@ from argparse import (
     ArgumentParser
 )
 from actions import (
+    LOG_STANDARD,
     GitContext,
     switch_context,
     RemoveDirectory
@@ -302,6 +303,12 @@ of the patch file in 'git am' compatible format."""
         metavar = "path/to/alternative/git",
         help = """Use explicit git executable."""
     )
+    ap.add_argument("-l", "--log",
+        type = arg_type_output_file,
+        default = LOG_STANDARD,
+        metavar = "path/to/log.csv",
+        help = "Log git`s standard output and errors to that file."
+    )
 
     args = ap.parse_args()
 
@@ -390,7 +397,18 @@ of the patch file in 'git am' compatible format."""
             # Source points to a local repository.
             srcRepoPath = local
 
-        ctx = GitContext(src_repo_path = srcRepoPath, git_command = git_cmd)
+        log = args.log
+
+        # overwrite log
+        if log is not LOG_STANDARD and isfile(log):
+            unlink(log)
+
+        ctx = GitContext(
+            src_repo_path = srcRepoPath,
+            git_command = git_cmd,
+            log = log
+        )
+
         switch_context(ctx)
     else:
         srcRepoPath = ctx.src_repo_path

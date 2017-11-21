@@ -372,6 +372,12 @@ class Action(sloted):
 
     q = queue
 
+    def _out(self, data):
+        self._ctx._out_log.write(data)
+
+    def _err(self, data):
+        self._ctx._err_log.write(data)
+
     def __call__(self):
         raise NotImplementedError()
 

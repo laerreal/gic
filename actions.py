@@ -464,7 +464,11 @@ class GitAction(Action):
         if cwd != self.path:
             chdir(self.path)
 
-        launch((self._ctx.git_command,) + cmd_args, flush = True)
+        out, err = launch((self._ctx.git_command,) + cmd_args)
+        if out:
+            self._out(out)
+        if err:
+            self._err(err)
 
     def git2(self, *cmd_args):
         cwd = getcwd()

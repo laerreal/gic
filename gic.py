@@ -19,8 +19,7 @@ from os.path import (
 from common import (
     launch,
     composite_type,
-    pythonize,
-    callco
+    pythonize
 )
 from traceback import (
     print_exc,
@@ -400,12 +399,10 @@ of the patch file in 'git am' compatible format."""
 
     repo = Repo(srcRepoPath)
     sha2commit = ctx._sha2commit
-    callco(
-        GICCommitDesc.co_build_git_graph(repo, sha2commit,
-            skip_remotes = True,
-            skip_stashes = True,
-            refs = args.refs
-        )
+    GICCommitDesc.build_git_graph(repo, sha2commit,
+        skip_remotes = True,
+        skip_stashes = True,
+        refs = args.refs
     )
 
     print("Total commits: %d" % len(sha2commit))

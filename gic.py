@@ -115,7 +115,7 @@ def arg_type_new_directory(string):
 
 def arg_type_output_file(string):
     directory, _ = split(string)
-    if not isdir(directory):
+    if directory and not isdir(directory):
         raise ArgumentTypeError("Cannot create file '%s' because '%s' is not "
             "a directory" % (string, directory)
         )

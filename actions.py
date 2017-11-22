@@ -33,6 +33,7 @@ __all__ = [
       , "GitContext"
   , "LOG_STANDARD"
   , "switch_context"
+  , "get_context"
 ]
 
 from shutil import rmtree
@@ -83,6 +84,9 @@ def switch_context(ctx):
     ret = current_context
     current_context = ctx
     return ret
+
+def get_context():
+    return current_context
 
 def csv_excape(cell):
     if b";" in cell:

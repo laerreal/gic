@@ -43,6 +43,9 @@ def get_class_total_args(Class):
     merge_kwa = True
 
     for Class in getmro(Class):
+        if Class is object:
+            continue
+
         args, varargs, keywords, defaults = getargspec(Class.__init__)
 
         kwargs_count = 0 if defaults is None else  len(defaults)

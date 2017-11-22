@@ -288,6 +288,8 @@ class GitContext(ActionContext):
         # walk cache_path and fill _cahce
         self._cache = cache = {}
 
+        cwd = getcwd()
+
         if self.cache_path:
             for root, _, files in walk(self.cache_path):
                 for f in files:
@@ -302,7 +304,7 @@ class GitContext(ActionContext):
                         )
                         continue
 
-                    cache[key] = join(root, f)
+                    cache[key] = join(cwd, root, f)
 
         print("cache = " + str(self._cache)
             .replace(",", ",\n   ")

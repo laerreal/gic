@@ -66,7 +66,11 @@ from common import (
     launch,
     LaunchFailed
 )
-from six import b
+from six import (
+    b,
+    u
+)
+from re import compile
 
 current_context = None
 
@@ -249,16 +253,20 @@ class ActionContext(sloted):
         g.line("for a in actions:")
         g.line("    a.q()")
 
+cache_file_re = compile("[A-Fa-f0-9]{40}.*")
+
 class GitContext(ActionContext):
     __slots__ = ["_sha2commit", "src_repo_path", "_origin2cloned",
-                 "git_command", "_git_version"]
+                 "git_command", "_git_version", "cache_path", "_cache"]
 
     def __init__(self,
         git_command = "git",
+        cache_path = None,
         **kw
     ):
         super(GitContext, self).__init__(
             git_command = git_command,
+            cache_path = cache_path,
             **kw
         )
 
@@ -272,6 +280,31 @@ class GitContext(ActionContext):
 
         _, _, version = _stdout.split(b" ")[:3]
         self._git_version = tuple(int(v) for v in version.split(b".")[:3])
+
+        # walk cache_path and fill _cahce
+        self._cache = cache = {}
+
+        if self.cache_path:
+            for root, _, files in walk(self.cache_path):
+                for f in files:
+                    if not cache_file_re.match(f):
+                        continue
+
+                    key = b(f[:40].lower())
+
+                    if key in cache:
+                        print("Multiple entries for %s found in the "
+                            "cache" % u(key)
+                        )
+                        continue
+
+                    cache[key] = join(root, f)
+
+        print("cache = " + str(self._cache)
+            .replace(",", ",\n   ")
+            .replace("{", "{\n    ")
+            .replace("}", "\n}")
+        )
 
     def __backup_cloned(self):
         origin2cloned = {}

@@ -826,7 +826,8 @@ class HEAD2PatchFile(PatchFileAction):
         f.close()
 
 class ApplyCache(GitAction):
-    __slots__ = ["commit_sha"]
+    __slots__ = ["commit_sha", "_changed_files", "_deleted_files",
+                 "_created_files"]
 
     def __call__(self):
         ctx = self._ctx
@@ -925,3 +926,7 @@ class ApplyCache(GitAction):
             msg_f.close()
         else:
             self.git("commit", "--only", "--amend", "-m", msg)
+
+        self._changed_files = changed_files
+        self._deleted_files = deleted_files
+        self._created_files = created_files

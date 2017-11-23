@@ -615,6 +615,9 @@ class MergeCloned(GitAction):
                 # there is something else...
                 raise e
 
+            # try to resolve conflicts using the cache
+            if ctx.cache_path:
+                ApplyCache(path = self.path, commit_sha = commit.sha)
             # let user to resolve conflict by self
             confl_str = (
                 ("is merge conflict with '%s'" % conflicts[0])
@@ -743,6 +746,9 @@ class CherryPick(GitAction):
                     # there is something else...
                     raise e
 
+                # try to resolve conflicts using the cache
+                if ctx.cache_path:
+                    ApplyCache(path = self.path, commit_sha = c.sha)
                 # let user to resolve conflict by self
                 confl_str = (
                     ("is conflict with '%s'" % conflicts[0])

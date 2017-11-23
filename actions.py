@@ -510,16 +510,7 @@ class GitAction(Action):
             self._err(err)
 
     def git(self, *cmd_args):
-        cwd = getcwd()
-
-        if cwd != self.path:
-            chdir(self.path)
-
-        out, err = launch((self._ctx.git_command,) + cmd_args)
-        if out:
-            self._out(out)
-        if err:
-            self._err(err)
+        self.launch(*((self._ctx.git_command,) + cmd_args))
 
     def git2(self, *cmd_args):
         cwd = getcwd()

@@ -264,16 +264,19 @@ cache_file_re = compile("[A-Fa-f0-9]{40}.*")
 
 class GitContext(ActionContext):
     __slots__ = ["_sha2commit", "src_repo_path", "_origin2cloned",
-                 "git_command", "_git_version", "cache_path", "_cache"]
+                 "git_command", "_git_version", "cache_path", "_cache",
+                 "from_cache"]
 
     def __init__(self,
         git_command = "git",
         cache_path = None,
+        from_cache = False,
         **kw
     ):
         super(GitContext, self).__init__(
             git_command = git_command,
             cache_path = cache_path,
+            from_cache = from_cache,
             **kw
         )
 

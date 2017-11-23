@@ -30,6 +30,7 @@ __all__ = [
               , "ApplyPatchFile"
               , "HEAD2PatchFile"
           , "ApplyCache"
+              , "ApplyCacheOrInterrupt"
   , "ActionContext"
       , "GitContext"
   , "LOG_STANDARD"
@@ -930,3 +931,19 @@ class ApplyCache(GitAction):
         self._changed_files = changed_files
         self._deleted_files = deleted_files
         self._created_files = created_files
+
+class ApplyCacheOrInterrupt(ApplyCache):
+    __slots__ = [
+        "reason" # for interrupt
+    ]
+
+    def __call__(self):
+        if self.commit_sha in self._ctx._cache:
+            ApplyCache.__call__(self)
+            # stage all changes affected by the patch
+            for f in chain(self._changed_files, self._created_files,
+                           self._deleted_files
+            ):
+                self.git("add", f)
+        else:
+            Interrupt(reason = self.reason)

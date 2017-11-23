@@ -497,6 +497,18 @@ class ResetAuthor(Action):
 class GitAction(Action):
     __slots__ = ["path", "_stdout", "_stderr"]
 
+    def launch(self, *cmd_args):
+        cwd = getcwd()
+
+        if cwd != self.path:
+            chdir(self.path)
+
+        out, err = launch(cmd_args)
+        if out:
+            self._out(out)
+        if err:
+            self._err(err)
+
     def git(self, *cmd_args):
         cwd = getcwd()
 

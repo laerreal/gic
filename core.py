@@ -365,6 +365,11 @@ insertions:
             breaks.remove(c_sha) # Detection of unused breaks
 
             if at_least_one_in_trunk:
+                if get_context().cache_path:
+                    ApplyCache(
+                        path = dstRepoPath,
+                        commit_sha = c_sha,
+                    )
                 # Note that SHA1 of the cloned commit is unknown now.
                 # Hence, use its message to identify it for a user.
                 try:

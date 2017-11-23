@@ -318,6 +318,12 @@ patches from the cache. A patch file name must start with SHA1 of corresponding
 original commit."""
         # TODO: User modifications will be also preserved in the cache.
     )
+    ap.add_argument("--from-cache",
+        action = "store_true",
+        help = """If a patch is found in the cache then the process will not
+be interrupted on either a conflicts or a break point. All changes is taken
+from that patch."""
+    )
 
     args = ap.parse_args()
 
@@ -416,6 +422,7 @@ original commit."""
             src_repo_path = srcRepoPath,
             git_command = git_cmd,
             cache_path = args.cache_path,
+            from_cache = args.from_cache,
             log = log
         )
 

@@ -309,6 +309,15 @@ of the patch file in 'git am' compatible format."""
         metavar = "path/to/log.csv",
         help = "Log git`s standard output and errors to that file."
     )
+    ap.add_argument("-c", "--cache",
+        type = arg_type_directory,
+        metavar = "path/to/cache",
+        dest = "cache_path",
+        help = """Resolve conflicts or edit break point commits using
+patches from the cache. A patch file name must start with SHA1 of corresponding
+original commit."""
+        # TODO: User modifications will be also preserved in the cache.
+    )
 
     args = ap.parse_args()
 
@@ -406,6 +415,7 @@ of the patch file in 'git am' compatible format."""
         ctx = GitContext(
             src_repo_path = srcRepoPath,
             git_command = git_cmd,
+            cache_path = args.cache_path,
             log = log
         )
 

@@ -29,6 +29,7 @@ __all__ = [
           , "PatchFileAction"
               , "ApplyPatchFile"
               , "HEAD2PatchFile"
+          , "ApplyCache"
   , "ActionContext"
       , "GitContext"
   , "LOG_STANDARD"
@@ -72,6 +73,7 @@ from six import (
     u
 )
 from re import compile
+from itertools import chain
 
 current_context = None
 
@@ -816,3 +818,104 @@ class HEAD2PatchFile(PatchFileAction):
         f = open(patch_name, "wb")
         f.write(self._stdout)
         f.close()
+
+class ApplyCache(GitAction):
+    __slots__ = ["commit_sha"]
+
+    def __call__(self):
+        ctx = self._ctx
+        cache = ctx._cache
+        sha = self.commit_sha
+
+        if sha not in cache:
+            return
+
+        patch_file_name = cache[sha]
+
+        print("Applying changes from " + patch_file_name)
+
+        # analyze the patch and prepare working directory to patching
+        p = open(patch_file_name, "rb")
+        liter = iter(list(p.readlines()))
+        p.close()
+
+        msg = b""
+        for l in liter:
+            if l.startswith(b"Subject: "):
+                msg += l[9:]
+                break
+        else:
+            raise ValueError("Incorrect patch file: no commit message.")
+
+        msg_lines = []
+        for l in liter:
+            if l.startswith(b"diff --git "):
+                msg += b"".join(msg_lines[:-1])
+                break
+            msg_lines.append(l)
+        else:
+            raise ValueError(
+                "Incorrect patch file: commit message terminator is not found."
+            )
+
+        changed_files = set()
+        created_files = set()
+        deleted_files = set()
+
+        for l in liter:
+            if l.startswith(b"--- a/"):
+                file_name = l[6:].strip(b"\n\r")
+                l = next(liter)
+                if l.startswith(b"--- /dev/null"):
+                    deleted_files.add(file_name)
+                else:
+                    changed_files.add(file_name)
+            elif l.startswith(b"--- /dev/null"):
+                l = next(liter)
+                created_files.add(l[6:].strip(b"\n\r"))
+
+        # for  n in ["changed_files", "created_files", "deleted_files"]:
+        #    print(n + " = " + str(locals()[n])
+        #        .replace("set([", "set([\n    ")
+        #        .replace("'])", "'\n])")
+        #        .replace("', '", "',\n    '")
+        #    )
+
+        s2c = ctx._sha2commit
+
+        c = s2c[sha]
+
+        if changed_files or deleted_files:
+            p = c.parents[0]
+            p_cloned_sha = p.cloned_sha
+
+            for cf in chain(changed_files, deleted_files):
+                self.git("checkout", p_cloned_sha, cf)
+
+        for f in created_files:
+            if isfile(f):
+                self.launch("rm", f)
+
+        # actual patching
+        try:
+            out, err = launch(["patch", "-p", "1", "-i", patch_file_name],
+                epfx = "Failed to apply changes from '%s'" % patch_file_name
+            )
+        except LaunchFailed as e:
+            out, err = e._stdout, e._stderr
+            Interrupt(reason = str(e))
+
+        if out:
+            self._out(out)
+        if err:
+            self._err(err)
+
+        # apply commit message
+        merge_msg_path = join(self.path, ".git", "MERGE_MSG")
+        if isfile(merge_msg_path):
+            # a merge is in progress
+            msg_f = open(merge_msg_path, "wb")
+            msg_f.write(msg)
+            msg_f.close()
+        else:
+            self.git("commit", "--only", "--amend", "-m", msg)

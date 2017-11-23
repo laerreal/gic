@@ -619,20 +619,28 @@ class MergeCloned(GitAction):
                 # there is something else...
                 raise e
 
-            # try to resolve conflicts using the cache
-            if ctx.cache_path:
-                ApplyCache(path = self.path, commit_sha = commit.sha)
-            # let user to resolve conflict by self
             confl_str = (
                 ("is merge conflict with '%s'" % conflicts[0])
                     if len (conflicts) == 1
                 else "are merge conflicts"
             )
-            Interrupt(
-                reason = "There %s. Interrupting... %s" % (
-                    confl_str, MSG_MNG_CNFLCT_BY_SFL
+            reason = ("There %s. Interrupting... %s" % (
+                confl_str, MSG_MNG_CNFLCT_BY_SFL
+            ))
+
+            if ctx.from_cache:
+                ApplyCacheOrInterrupt(
+                    path = self.path,
+                    commit_sha = commit.sha,
+                    reason = reason
                 )
-            )
+            else:
+                # try to resolve conflicts using the cache
+                if ctx.cache_path:
+                    ApplyCache(path = self.path, commit_sha = commit.sha)
+                # let user to resolve conflict by self
+                Interrupt(reason = reason)
+
             # preserve original committer information
             ctx.plan_set_commiter_by_env()
             ContinueCommitting(
@@ -750,18 +758,27 @@ class CherryPick(GitAction):
                     # there is something else...
                     raise e
 
-                # try to resolve conflicts using the cache
-                if ctx.cache_path:
-                    ApplyCache(path = self.path, commit_sha = c.sha)
-                # let user to resolve conflict by self
                 confl_str = (
                     ("is conflict with '%s'" % conflicts[0])
                         if len (conflicts) == 1
                     else "are conflicts"
                 )
-                Interrupt(reason = "There %s in course of cherry picking. "
-                    "Interrupting... %s" % (confl_str, MSG_MNG_CNFLCT_BY_SFL)
-                )
+                reason = ("There %s in course of cherry picking. "
+                    "Interrupting... %s" % (confl_str, MSG_MNG_CNFLCT_BY_SFL))
+
+                if ctx.from_cache:
+                    ApplyCacheOrInterrupt(
+                        path = self.path,
+                        commit_sha = c.sha,
+                        reason = reason
+                    )
+                else:
+                    # try to resolve conflicts using the cache
+                    if ctx.cache_path:
+                        ApplyCache(path = self.path, commit_sha = c.sha)
+                    # let user to resolve conflict by self
+                    Interrupt(reason = reason)
+
                 # preserve original committer information
                 ctx.plan_set_commiter_by_env()
                 ContinueCommitting(

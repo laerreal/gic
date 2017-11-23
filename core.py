@@ -361,15 +361,13 @@ insertions:
 
             plan_heads(c, dstRepoPath)
 
+        ctx = get_context()
+
         if c_sha in breaks:
             breaks.remove(c_sha) # Detection of unused breaks
 
             if at_least_one_in_trunk:
-                if get_context().cache_path:
-                    ApplyCache(
-                        path = dstRepoPath,
-                        commit_sha = c_sha,
-                    )
+
                 # Note that SHA1 of the cloned commit is unknown now.
                 # Hence, use its message to identify it for a user.
                 try:
@@ -378,7 +376,21 @@ insertions:
                     msg = " after empty message commit %s" % c_sha
                 else:
                     msg = " after '%s'" % msg
-                Interrupt(reason = "Interrupting%s as requested..." % msg)
+                reason = "Interrupting%s as requested..." % msg
+
+                if ctx.from_cache:
+                    ApplyCacheOrInterrupt(
+                        path = dstRepoPath,
+                        commit_sha = c_sha,
+                        reason = reason
+                    )
+                else:
+                    if ctx.cache_path:
+                        ApplyCache(
+                            path = dstRepoPath,
+                            commit_sha = c_sha,
+                        )
+                    Interrupt(reason = reason)
 
                 # Update committer name, e-mail and date after user actions.
                 SetCommitter(

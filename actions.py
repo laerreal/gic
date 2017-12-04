@@ -29,6 +29,7 @@ __all__ = [
           , "PatchFileAction"
               , "ApplyPatchFile"
               , "HEAD2PatchFile"
+          , "UpdateCache"
           , "ApplyCache"
               , "ApplyCacheOrInterrupt"
   , "ActionContext"
@@ -40,6 +41,7 @@ __all__ = [
 
 from shutil import rmtree
 from os import (
+    rename,
     walk,
     environ,
     unlink,
@@ -49,6 +51,7 @@ from os import (
     makedirs
 )
 from os.path import (
+    basename,
     isdir,
     isfile,
     join,
@@ -74,7 +77,10 @@ from six import (
     u
 )
 from re import compile
-from itertools import chain
+from itertools import (
+    chain,
+    count
+)
 
 current_context = None
 
@@ -856,6 +862,62 @@ class HEAD2PatchFile(PatchFileAction):
 
         f = open(patch_name, "wb")
         f.write(self._stdout)
+        f.close()
+
+class UpdateCache(GitAction):
+    __slots__ = ["commit_sha"]
+    def __call__(self):
+        self.git2("format-patch", "--stdout", "HEAD~1")
+        patch = self._stdout
+
+        ctx = self._ctx
+        cache = ctx._cache
+        cache_path = ctx.cache_path
+
+        sha = self.commit_sha
+        cached = cache.get(sha, None)
+
+
+        if cached is None:
+            write_to = join(cache_path, sha + ".patch")
+            print("Caching user changes to " + write_to)
+        else:
+            f = open(cached, "rb")
+            cached_patch = f.read()
+            f.close()
+
+            # The first line contains SHA1 which is always different.
+            if cached_patch.split(b"\n")[1:] == patch.split(b"\n")[1:]:
+                return
+
+            # provide directory for current patch version backup
+            backup_dir = join(cache_path, "backup")
+            for i in count(0):
+                if exists(backup_dir):
+                    if isdir(backup_dir):
+                        break
+                else:
+                    makedirs(backup_dir)
+                    break
+                backup_dir = join(cache_path, "backup" + str(i))
+
+            # provide name for the backup file
+            backup_name = basename(cached)
+            backup_path = join(backup_dir, backup_name)
+            for i in count(0):
+                if not exists(backup_path):
+                    break
+
+                backup_path = join(backup_dir, "%s-%d" % (backup_name, i))
+
+            print("Backing up current cache to " + backup_path)
+            rename(cached, backup_path)
+
+            write_to = cached
+            print("Updating user changes in " + write_to)
+
+        f = open(write_to, "wb")
+        f.write(patch)
         f.close()
 
 re_commit_message = compile(b"(Subject: *)(\[PATCH\] *)?(.*)")

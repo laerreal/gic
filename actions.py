@@ -876,6 +876,7 @@ class UpdateCache(GitAction):
     def __call__(self):
         self.git2("format-patch",
             "--stdout",
+            "-k", # --keep-subject, avoids [PATCH] prefix
             "--binary", # TODO: test me
             "HEAD~1"
         )

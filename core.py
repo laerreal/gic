@@ -404,6 +404,8 @@ insertions:
                     commit_sha = c_sha
                 )
                 ResetCommitter()
+                if ctx.cache_path:
+                    UpdateCache(path = dstRepoPath, commit_sha = c_sha)
             else:
                 print("Cannot interrupt on '%s' because no commits "
                     "of this trunk are copied." % c_sha

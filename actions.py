@@ -304,6 +304,8 @@ class GitContext(ActionContext):
         if cache_path:
             for root, _, files in walk(cache_path):
                 for f in files:
+                    # First 40 characters of the a file name must be the SHA1
+                    # of the corresponding commit.
                     if not cache_file_re.match(f):
                         continue
 

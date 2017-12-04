@@ -851,6 +851,8 @@ class HEAD2PatchFile(PatchFileAction):
         f.write(self._stdout)
         f.close()
 
+re_commit_message = compile(b"(Subject: *)(\[PATCH\] *)?(.*)")
+
 class ApplyCache(GitAction):
     __slots__ = ["commit_sha", "_changed_files", "_deleted_files",
                  "_created_files"]
@@ -874,8 +876,9 @@ class ApplyCache(GitAction):
 
         msg = b""
         for l in liter:
-            if l.startswith(b"Subject: "):
-                msg += l[9:]
+            minfo = re_commit_message.match(l)
+            if minfo:
+                msg += minfo.group(3)
                 break
         else:
             raise ValueError("Incorrect patch file: no commit message.")

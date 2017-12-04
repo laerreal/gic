@@ -321,14 +321,17 @@ class GitContext(ActionContext):
                         continue
 
                     key = b(f[:40].lower())
+                    cached_file = join(root, f)
 
                     if key in cache:
                         print("Multiple entries for %s found in the "
-                            "cache" % u(key)
+                            "cache:\n    '%s'\n    '%s'" % (
+                                u(key), cached_file, cache[key]
+                            )
                         )
                         continue
 
-                    cache[key] = join(root, f)
+                    cache[key] = cached_file
 
         print("cache = " + str(self._cache)
             .replace(",", ",\n   ")

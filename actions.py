@@ -882,7 +882,7 @@ class ApplyCache(GitAction):
 
         msg_lines = []
         for l in liter:
-            if l.startswith(b"diff --git "):
+            if l.startswith(b"diff --git ") or l.startswith(b"---"):
                 msg += b"".join(msg_lines[:-1])
                 break
             msg_lines.append(l)

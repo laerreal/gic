@@ -871,7 +871,11 @@ class HEAD2PatchFile(PatchFileAction):
 class UpdateCache(GitAction):
     __slots__ = ["commit_sha"]
     def __call__(self):
-        self.git2("format-patch", "--stdout", "HEAD~1")
+        self.git2("format-patch",
+            "--stdout",
+            "--binary", # TODO: test me
+            "HEAD~1"
+        )
         patch = self._stdout
 
         ctx = self._ctx

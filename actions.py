@@ -315,7 +315,7 @@ class GitContext(ActionContext):
                         )
                         continue
 
-                    cache[key] = join(cwd, root, f)
+                    cache[key] = join(root, f)
 
         print("cache = " + str(self._cache)
             .replace(",", ",\n   ")

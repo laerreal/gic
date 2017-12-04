@@ -806,6 +806,8 @@ class CherryPick(GitAction):
                     commit_sha = self.commit_sha
                 )
                 ResetCommitter()
+                if ctx.cache_path:
+                    UpdateCache(path = self.path, commit_sha = c.sha)
                 return
 
         self.git2("rev-parse", "HEAD")

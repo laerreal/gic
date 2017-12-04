@@ -301,8 +301,13 @@ class GitContext(ActionContext):
             cache_path = join(cwd, cache_path)
             self.cache_path = cache_path
 
+        backup_dir = join(cache_path, "backup")
+
         if cache_path:
             for root, _, files in walk(cache_path):
+                if root.startswith(backup_dir):
+                    continue
+
                 for f in files:
                     # First 40 characters of the a file name must be the SHA1
                     # of the corresponding commit.

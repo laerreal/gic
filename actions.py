@@ -294,10 +294,15 @@ class GitContext(ActionContext):
         # walk cache_path and fill _cahce
         self._cache = cache = {}
 
+        # refer the cache by absolute path
         cwd = getcwd()
+        cache_path = self.cache_path
+        if not cache_path.startswith(cwd):
+            cache_path = join(cwd, cache_path)
+            self.cache_path = cache_path
 
-        if self.cache_path:
-            for root, _, files in walk(self.cache_path):
+        if cache_path:
+            for root, _, files in walk(cache_path):
                 for f in files:
                     if not cache_file_re.match(f):
                         continue

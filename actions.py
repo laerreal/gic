@@ -666,6 +666,8 @@ class MergeCloned(GitAction):
                 commit_sha = self.commit_sha
             )
             ResetCommitter()
+            if ctx.cache_path:
+                UpdateCache(path = self.path, commit_sha = commit.sha)
             return
 
         self.git2("rev-parse", "HEAD")

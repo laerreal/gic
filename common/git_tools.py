@@ -47,7 +47,10 @@ refs:
     'in' operator. A 'list' is enough for small amount of heads. Consider a
     'set' for big head lists.
 
-    References must be given by full path (E.g. refs/heads/may_branch)
+    References must be given by full path (E.g. refs/heads/may_branch).
+
+    If None is given then ancestors of all references will be taken into
+    account.
         """
 
         refs = antiset() if refs is None else set(refs)

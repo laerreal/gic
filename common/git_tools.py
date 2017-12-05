@@ -82,18 +82,20 @@ refs:
             else:
                 continue
 
+            hcommit = head.commit
+
             try:
-                head_desc = commit_desc_nodes[head.commit.hexsha]
+                head_desc = commit_desc_nodes[hcommit.hexsha]
             except KeyError:
-                head_desc = klass(head.commit.hexsha, [], [])
+                head_desc = klass(hcommit.hexsha, [], [])
                 head_desc.heads.append(head)
             else:
                 head_desc.heads.append(head)
                 continue
 
-            commit_desc_nodes[head.commit.hexsha] = head_desc
+            commit_desc_nodes[hcommit.hexsha] = head_desc
             # add edges connected to head being processed
-            for p in head.commit.parents:
+            for p in hcommit.parents:
                 build_stack.append((p, head_desc))
 
             while build_stack:

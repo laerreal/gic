@@ -101,12 +101,13 @@ refs:
 
             while build_stack:
                 parent, child_commit_desc = build_stack.pop()
+                psha = parent.hexsha
 
                 try:
-                    parent_desc = commit_desc_nodes[parent.hexsha]
+                    parent_desc = commit_desc_nodes[psha]
                 except KeyError:
-                    parent_desc = klass(parent.hexsha, [], [])
-                    commit_desc_nodes[parent.hexsha] = parent_desc
+                    parent_desc = klass(psha, [], [])
+                    commit_desc_nodes[psha] = parent_desc
 
                     if parent.parents:
                         for p in parent.parents:

@@ -22,6 +22,7 @@ if sys.version_info[0] != 2:
 
 class GICCommitDesc(CommitDesc):
     __slots__ = [
+        # A commit is used if at least one of its descendants is copied.
         "used",
         "skipped",
         "processed",

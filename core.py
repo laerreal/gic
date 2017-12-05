@@ -306,6 +306,7 @@ insertions:
                 elif h.path.startswith("refs/tags/"):
                     print("Tag '%s' will be skipped with its commit!" % h.name)
         else:
+            c.used = True
             at_least_one_in_trunk = True
 
             if len(c.parents) > 1:
@@ -418,6 +419,24 @@ insertions:
     # delete temporary branch names
     for o in range(0, orphan_counter):
         DeleteHead(path = dstRepoPath, name = orphan(o))
+
+    # propagate `used` flag
+    for c in queue:
+        if c.skipped:
+            continue
+        if not c.used:
+            continue
+
+        stack = list(c.parents)
+        while stack:
+            # a - ancestor
+            a = stack.pop()
+            if a.skipped:
+                continue # `skipped` commit do not propagate `used` flag
+            if a.used:
+                continue # `used` flag was already propagated
+            a.used = True
+            stack.append(reversed(a.parents))
 
     # delete tags of non-cloned commits
     for tag in repo.references:

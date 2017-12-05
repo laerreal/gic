@@ -89,9 +89,7 @@ refs:
                 head_desc = commit_desc_nodes[hsha]
             except KeyError:
                 head_desc = klass(hsha, [], [])
-                head_desc.heads.append(head)
             else:
-                head_desc.heads.append(head)
                 continue
 
             commit_desc_nodes[hsha] = head_desc
@@ -176,6 +174,16 @@ refs:
 
         if not isinstance(refs, antiset) and refs:
             raise ValueError("Unknown reference(s): " + ", ".join(refs))
+
+        for head in repo.references:
+            hsha = head.commit.hexsha
+
+            try:
+                desc = commit_desc_nodes[hsha]
+            except KeyError:
+                continue
+
+            desc.heads.append(head)
 
     @classmethod
     def build_git_graph(klass, *args, **kw):

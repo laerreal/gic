@@ -445,7 +445,7 @@ insertions:
 
         # Note that, no commit descriptors could be created for a trunk.
         c = sha2commit.get(tag.commit.hexsha, None)
-        if c is None or c.skipped:
+        if c is None or not c.used:
             DeleteTag(path = dstRepoPath, name = tag.name)
 
     CheckoutCloned(

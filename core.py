@@ -22,6 +22,7 @@ if sys.version_info[0] != 2:
 
 class GICCommitDesc(CommitDesc):
     __slots__ = [
+        "used",
         "skipped",
         "processed",
         "cloned_sha"
@@ -33,6 +34,7 @@ class GICCommitDesc(CommitDesc):
         self.cloned_sha = None
         self.processed = False
         self.skipped = False
+        self.used = False
 
 def is_subtree(c, acceptable = 4):
     """ Heuristically detect a subtree merge.

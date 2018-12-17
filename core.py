@@ -143,7 +143,8 @@ def plan(repo, sha2commit, dstRepoPath,
     main_stream_bits = 0,
     breaks = None,
     skips = None,
-    insertions = None
+    insertions = None,
+    purge = None
 ):
     """
 insertions:
@@ -169,6 +170,7 @@ insertions:
     """
     breaks = set() if breaks is None else set(breaks)
     skips = set() if skips is None else set(skips)
+    purge = set() if purge is None else set(purge)
 
     # Group insertions by SHA1 for fastest search. Order of insertions for one
     # SHA1 must be preserved.

@@ -324,6 +324,13 @@ original commit."""
 be interrupted on either a conflicts or a break point. All changes is taken
 from that patch."""
     )
+    ap.add_argument("-p", "--purge",
+        metavar = "file",
+        action = "append",
+        help = """Remove the file from each commit. If a commit is empty after
+file removing, the commit is skipped.
+        """
+    )
 
     args = ap.parse_args()
 
@@ -463,7 +470,8 @@ from that patch."""
             breaks = args.breaks,
             skips = args.skips,
             main_stream_bits = ms_bits,
-            insertions = args.insertions
+            insertions = args.insertions,
+            purge = args.purge
         )
 
         # remove temporal clone of the source repository
